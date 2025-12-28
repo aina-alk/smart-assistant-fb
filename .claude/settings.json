@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "experimental:mcp"
+      ]
+    },
+    "gcloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@google-cloud/gcloud-mcp"
+      ]
+    },
+    "assemblyai": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "assembly-ai-mcp@latest"
+      ],
+      "env": {
+        "ASSEMBLYAI_API_KEY": "${ASSEMBLYAI_API_KEY}"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "firebase@claude-plugins-official": true
+  }
+}
