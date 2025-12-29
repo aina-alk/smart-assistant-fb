@@ -4,6 +4,7 @@
 
 import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialiser Firebase Admin (singleton)
 if (!getApps().length) {
@@ -38,6 +39,8 @@ if (!getApps().length) {
 }
 
 export const adminAuth = getAuth();
+export const adminDb = getFirestore();
+export { FieldValue };
 
 /**
  * Vérifie et décode un cookie de session Firebase

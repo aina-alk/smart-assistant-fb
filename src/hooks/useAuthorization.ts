@@ -7,8 +7,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { onAuthStateChanged, getIdTokenResult, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { auth, db, functions } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
 import type { CustomClaims, UserRole, UserStatus } from '@/types/user';
 
 // Type pour les données utilisateur Firestore
@@ -178,6 +177,7 @@ export function useAuthorization(): AuthorizationState {
 
 /**
  * Hook pour les actions admin
+ * Utilise les API routes Next.js au lieu des Cloud Functions
  */
 export function useAdminActions() {
   const [isLoading, setIsLoading] = useState(false);
@@ -187,9 +187,19 @@ export function useAdminActions() {
     setIsLoading(true);
     setError(null);
     try {
-      const fn = httpsCallable(functions, 'approveUser');
-      const result = await fn({ userId, structureId });
-      return result.data;
+      const response = await fetch(`/api/admin/users/${userId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ structureId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur approbation');
+      }
+
+      return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur approbation';
       setError(message);
@@ -203,9 +213,19 @@ export function useAdminActions() {
     setIsLoading(true);
     setError(null);
     try {
-      const fn = httpsCallable(functions, 'rejectUser');
-      const result = await fn({ userId, reason });
-      return result.data;
+      const response = await fetch(`/api/admin/users/${userId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur rejet');
+      }
+
+      return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur rejet';
       setError(message);
@@ -220,9 +240,19 @@ export function useAdminActions() {
       setIsLoading(true);
       setError(null);
       try {
-        const fn = httpsCallable(functions, 'updateUserStatus');
-        const result = await fn({ userId, newStatus, note });
-        return result.data;
+        const response = await fetch(`/api/admin/users/${userId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newStatus, note }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Erreur mise à jour');
+        }
+
+        return data;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erreur mise à jour';
         setError(message);
@@ -238,9 +268,17 @@ export function useAdminActions() {
     setIsLoading(true);
     setError(null);
     try {
-      const fn = httpsCallable(functions, 'getAdminStats');
-      const result = await fn({});
-      return result.data;
+      const response = await fetch('/api/admin/stats', {
+        method: 'GET',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur stats');
+      }
+
+      return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur stats';
       setError(message);
