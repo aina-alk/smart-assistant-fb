@@ -5,9 +5,19 @@
 'use client';
 
 import { createContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase/config';
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
+} from 'firebase/auth';
+import { auth, googleProvider, getEmailLinkActionCodeSettings } from '@/lib/firebase/config';
 import type { AuthContextType, AuthUser } from '@/types/auth';
+
+// Clé localStorage pour stocker l'email en attendant le callback
+const EMAIL_FOR_SIGN_IN_KEY = 'emailForSignIn';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -15,6 +25,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [emailLinkSent, setEmailLinkSent] = useState(false);
+  const [emailLinkLoading, setEmailLinkLoading] = useState(false);
 
   useEffect(() => {
     // Écouter les changements d'état d'authentification
@@ -85,8 +97,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Envoie un lien de connexion par email (passwordless)
+   */
+  const sendEmailLink = async (email: string) => {
+    try {
+      setError(null);
+      setEmailLinkLoading(true);
+      setEmailLinkSent(false);
+
+      const actionCodeSettings = getEmailLinkActionCodeSettings();
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+
+      // Sauvegarder l'email pour la vérification au callback
+      window.localStorage.setItem(EMAIL_FOR_SIGN_IN_KEY, email);
+      setEmailLinkSent(true);
+    } catch (err) {
+      console.error("Erreur lors de l'envoi du lien email:", err);
+      setError(err as Error);
+      throw err;
+    } finally {
+      setEmailLinkLoading(false);
+    }
+  };
+
+  /**
+   * Vérifie si le lien actuel est un lien de connexion par email
+   */
+  const isEmailLinkSignInFn = (link: string): boolean => {
+    return isSignInWithEmailLink(auth, link);
+  };
+
+  /**
+   * Finalise la connexion avec le lien email
+   */
+  const completeEmailLinkSignIn = async (email: string, link: string) => {
+    try {
+      setError(null);
+      setEmailLinkLoading(true);
+
+      await signInWithEmailLink(auth, email, link);
+
+      // Nettoyer l'email stocké
+      window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);
+      // L'état sera mis à jour automatiquement via onAuthStateChanged
+    } catch (err) {
+      console.error('Erreur lors de la connexion par lien email:', err);
+      setError(err as Error);
+      throw err;
+    } finally {
+      setEmailLinkLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, signInWithGoogle, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        signInWithGoogle,
+        signOut,
+        sendEmailLink,
+        completeEmailLinkSignIn,
+        isEmailLinkSignIn: isEmailLinkSignInFn,
+        emailLinkSent,
+        emailLinkLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

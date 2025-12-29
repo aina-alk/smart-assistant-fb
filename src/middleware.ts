@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const SESSION_COOKIE_NAME = 'session';
 
 // Routes publiques (ne nécessitent pas d'authentification)
-const PUBLIC_PATHS = ['/login', '/api/auth'];
+const PUBLIC_PATHS = ['/login', '/api/auth', '/auth/email-link/callback'];
 
 // Fichiers statiques et assets Next.js à ignorer
 const IGNORED_PATHS = ['/_next', '/favicon.ico', '/api/health'];

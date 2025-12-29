@@ -3,7 +3,7 @@
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, type Auth, type ActionCodeSettings } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -30,5 +30,21 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
 });
+
+/**
+ * Configuration pour l'authentification par lien email (passwordless)
+ * L'URL de callback doit être ajoutée dans Firebase Console > Authentication > Sign-in method > Authorized domains
+ */
+export const getEmailLinkActionCodeSettings = (): ActionCodeSettings => {
+  const baseUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  return {
+    url: `${baseUrl}/auth/email-link/callback`,
+    handleCodeInApp: true,
+  };
+};
 
 export default app;
