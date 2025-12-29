@@ -61,7 +61,7 @@ export const onUserStatusChanged = functions
 async function handleStatusChange(
   userId: string,
   userData: UserData,
-  oldStatus: UserStatus,
+  _oldStatus: UserStatus,
   newStatus: UserStatus
 ): Promise<void> {
   switch (newStatus) {

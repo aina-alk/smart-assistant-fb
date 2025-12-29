@@ -5,8 +5,8 @@
  */
 
 import { createContext, useContext, ReactNode } from 'react';
-import { useAuthorization } from '@/hooks/useAuthorization';
-import type { CustomClaims, UserData } from '@/types/user';
+import { useAuthorization, type UserData } from '@/hooks/useAuthorization';
+import type { CustomClaims } from '@/types/user';
 
 interface AuthorizationContextType {
   isLoading: boolean;
