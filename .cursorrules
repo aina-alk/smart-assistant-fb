@@ -1,0 +1,46 @@
+Tu es un agent de code pour ce repo (Next.js App Router 15 + React 19 + TypeScript strict) qui consomme un FHIR Store (FHIR R4) via Google Cloud Healthcare API.
+
+Règles globales
+- Réponds en français, concis, orienté code. Quand tu modifies du code, applique exactement les conventions existantes.
+- N’invente pas de modules/fichiers qui n’existent pas. Appuie-toi sur ce repo: `src/lib/api/fhir-client.ts`, `src/types/fhir.ts`, `src/lib/utils/fhir-helpers.ts`.
+- TypeScript strict: pas de `any`, pas de cast “pour faire passer”. Préfère typer correctement (génériques `T extends FHIRResource`) et gérer les `undefined`.
+- Ne loggue jamais de PHI (nom, tel, adresse, contenu clinique) en clair. Les logs doivent être anonymisés/minimaux.
+
+FHIR R4 (règles de modélisation)
+- Toute ressource doit avoir `resourceType` correct (ex: `'Patient'`, `'Encounter'`).
+- Références: utiliser `Reference.reference` au format `ResourceType/id`. Utiliser `createReference()` de `src/lib/utils/fhir-helpers.ts` au lieu de concaténer à la main.
+- Dates:
+  - `birthDate`: `YYYY-MM-DD`
+  - `dateTime`: ISO 8601 (UTC si possible)
+- Évite de forcer un `id` côté client lors d’un `POST` (sauf contrainte spécifique). Laisser le serveur attribuer l’ID.
+
+Accès API (Google Healthcare FHIR)
+- Toujours envoyer/consommer du JSON FHIR:
+  - header `Content-Type: application/fhir+json` (déjà fait dans `FHIRClient`)
+  - accepter `OperationOutcome` en erreur
+- Utiliser `FHIRClient` (`src/lib/api/fhir-client.ts`) pour CRUD et search; ne pas refaire un `fetch()` direct partout.
+- Gestion des erreurs:
+  - Attrape `FHIRError` et expose une erreur “safe” côté API (message court + `statusCode`), optionnellement un résumé de `outcome.issue` sans PHI.
+
+Recherche & pagination
+- Toujours construire les paramètres via `URLSearchParams` (comme dans `FHIRClient.search`).
+- Résultats search = `Bundle.type = 'searchset'` avec `entry[]` potentiellement absent. Ne jamais supposer `entry` non-null.
+- Pagination standard = `Bundle.link[relation='next'].url`.
+  - Note: le `FHIRClient` actuel n’expose pas de méthode `searchByUrl(nextUrl)`. Si tu implémentes la pagination, ajoute une méthode dédiée dans `FHIRClient` (ex: `getByUrl<T>(url)`), plutôt que bricoler.
+
+Bundles batch/transaction
+- Pour `FHIRClient.batch`, construire un `Bundle` avec:
+  - `resourceType: 'Bundle'`
+  - `type: 'batch'` ou `'transaction'`
+  - `entry[].request = { method, url }`
+- Transaction = all-or-nothing; Batch = best-effort. Choisir explicitement.
+
+API Routes Next.js (App Router)
+- Pour les route handlers (`src/app/api/**/route.ts`):
+  - Valider les inputs (Zod recommandé).
+  - Ne jamais renvoyer une ressource FHIR partielle/non conforme.
+  - Retourner `NextResponse.json(...)` avec des statuts HTTP cohérents.
+
+Qualité
+- Si tu ajoutes une feature FHIR (patients/encounters/docs), ajoute un petit “playbook”/doc dans `docs/` et garde les exemples alignés au `FHIRClient`.
+

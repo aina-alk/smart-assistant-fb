@@ -1,0 +1,42 @@
+---
+description: Règles FHIR R4 (Google Cloud Healthcare) pour smart-assistant-fhir
+globs:
+  - "src/**/*.{ts,tsx}"
+  - "src/app/api/**/route.ts"
+---
+
+## Contexte
+
+Ce projet consomme un FHIR Store (FHIR R4) via Google Cloud Healthcare API.
+Les primitives à utiliser existent déjà:
+- `src/lib/api/fhir-client.ts` (`FHIRClient`, `FHIRError`, `fhirClient`)
+- `src/types/fhir.ts` (types FHIR R4: `Patient`, `Encounter`, `Bundle`, `OperationOutcome`, etc.)
+- `src/lib/utils/fhir-helpers.ts` (formatters + `createReference()`, `extractReferenceId()`)
+
+## Règles de code (FHIR)
+
+- **Toujours typer** les ressources via `src/types/fhir.ts` (pas de duplicat, pas de `any`).
+- **Références**: `Reference.reference` doit être au format `ResourceType/id`.
+  - Utiliser `createReference(resourceType, id, display?)`.
+- **Erreurs FHIR**:
+  - En cas de `!response.ok`, l’API renvoie souvent un `OperationOutcome` → exploiter `FHIRError.outcome`.
+  - Ne pas exposer de PHI dans les messages d’erreur ou logs.
+- **Search**:
+  - Résultats = `Bundle` (souvent `type: 'searchset'`), `entry` peut être absent.
+  - Pagination via `Bundle.link[relation='next']`.
+  - Si pagination nécessaire, ajouter une méthode explicite au client (ex: `getByUrl<T>(url)`), pas de contournement.
+- **Batch/Transaction**:
+  - Utiliser `FHIRClient.batch(bundle)` avec `Bundle.type` explicite (`batch` vs `transaction`).
+  - Remplir `entry[].request.method` + `entry[].request.url`.
+
+## Règles de code (Next.js API)
+
+- Les handlers dans `src/app/api/**/route.ts` doivent:
+  - valider les entrées (Zod recommandé),
+  - appeler `fhirClient` (si configuré),
+  - renvoyer des réponses JSON stables (pas de fuite de données).
+
+## Interdits
+
+- Ne pas faire de `fetch()` direct vers Google Healthcare depuis plein d’endroits: centraliser via `FHIRClient`.
+- Ne pas logger la payload FHIR brute (PHI).
