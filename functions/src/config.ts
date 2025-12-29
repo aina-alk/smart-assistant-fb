@@ -2,10 +2,10 @@
  * Configuration des Cloud Functions
  */
 
-import { defineString } from 'firebase-functions/params';
-
-// Paramètres secrets (définis via Firebase CLI)
-export const resendApiKey = defineString('RESEND_API_KEY');
+// API Key Resend (via variable d'environnement)
+export const getResendApiKey = (): string | null => {
+  return process.env.RESEND_API_KEY || null;
+};
 
 // Configuration de l'application
 export const config = {
