@@ -2,17 +2,32 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { toast } from 'sonner';
+import { LogOut, Loader2 } from 'lucide-react';
 
 export default function HomePage() {
-  const handleToast = () => {
-    toast.success('Configuration réussie !', {
-      description: 'Tailwind CSS et shadcn/ui sont prêts à être utilisés.',
-    });
+  const { user, loading, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Déconnexion réussie');
+    } catch (error) {
+      console.error('Erreur de déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-8">
@@ -33,45 +48,48 @@ export default function HomePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="votre.email@exemple.fr"
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleToast} className="flex-1">
-              Commencer
-            </Button>
-            <Button variant="secondary" className="flex-1">
-              En savoir plus
-            </Button>
-          </div>
+          {user && (
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                  <AvatarFallback>
+                    {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-foreground">{user.displayName || 'Utilisateur'}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Déconnexion">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold mb-3">Couleurs personnalisées :</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="space-y-2">
-                <div className="h-12 rounded-md bg-primary" />
-                <p className="text-xs text-muted-foreground">Primary</p>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 rounded-md bg-secondary" />
-                <p className="text-xs text-muted-foreground">Secondary</p>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 rounded-md bg-success" />
-                <p className="text-xs text-muted-foreground">Success</p>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 rounded-md bg-warning" />
-                <p className="text-xs text-muted-foreground">Warning</p>
-              </div>
-            </div>
+            <h3 className="text-sm font-semibold mb-3">Fonctionnalités à venir :</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  Bientôt
+                </Badge>
+                Dictée vocale pour compte rendu de consultation
+              </li>
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  Bientôt
+                </Badge>
+                Génération automatique de CRC via IA
+              </li>
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  Bientôt
+                </Badge>
+                Intégration avec dossiers patients FHIR
+              </li>
+            </ul>
           </div>
         </CardContent>
       </Card>
