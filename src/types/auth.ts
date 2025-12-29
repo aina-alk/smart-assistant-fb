@@ -15,7 +15,15 @@ export interface AuthState {
   error: Error | null;
 }
 
-export interface AuthContextType extends AuthState {
+export interface EmailLinkState {
+  emailLinkSent: boolean;
+  emailLinkLoading: boolean;
+}
+
+export interface AuthContextType extends AuthState, EmailLinkState {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  sendEmailLink: (email: string) => Promise<void>;
+  completeEmailLinkSignIn: (email: string, link: string) => Promise<void>;
+  isEmailLinkSignIn: (link: string) => boolean;
 }
