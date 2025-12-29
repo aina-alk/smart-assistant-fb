@@ -4,6 +4,8 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, type Auth, type ActionCodeSettings } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFunctions, type Functions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,6 +26,12 @@ if (!getApps().length) {
 
 // Auth instance
 export const auth: Auth = getAuth(app);
+
+// Firestore instance
+export const db: Firestore = getFirestore(app);
+
+// Functions instance
+export const functions: Functions = getFunctions(app, 'europe-west1');
 
 // Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();

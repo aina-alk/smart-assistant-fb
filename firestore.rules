@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== FONCTIONS HELPER =====
+
+    // Vérifie si l'utilisateur est authentifié
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Vérifie si l'utilisateur est approuvé
+    function isApproved() {
+      return isAuthenticated() &&
+             request.auth.token.status == 'approved';
+    }
+
+    // Vérifie si l'utilisateur est admin
+    function isAdmin() {
+      return isApproved() &&
+             request.auth.token.role == 'admin';
+    }
+
+    // Vérifie si l'utilisateur est médecin approuvé
+    function isMedecin() {
+      return isApproved() &&
+             request.auth.token.role == 'medecin';
+    }
+
+    // Vérifie si c'est le propriétaire du document
+    function isOwner(userId) {
+      return isAuthenticated() &&
+             request.auth.uid == userId;
+    }
+
+    // ===== COLLECTION USERS =====
+
+    match /users/{userId} {
+      // Lecture : l'utilisateur lui-même ou un admin
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Création : uniquement l'utilisateur pour lui-même
+      // (première inscription après Google Sign-in)
+      allow create: if isOwner(userId) &&
+                       request.resource.data.status == 'pending_call' &&
+                       request.resource.data.email == request.auth.token.email;
+
+      // Mise à jour :
+      // - L'utilisateur peut modifier ses infos de base (pas le status/role)
+      // - L'admin peut tout modifier
+      allow update: if isAdmin() ||
+                       (isOwner(userId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'role', 'approvedAt', 'approvedBy',
+                                   'rejectedAt', 'rejectedBy', 'adminData']));
+
+      // Suppression : admin uniquement
+      allow delete: if isAdmin();
+    }
+
+    // ===== COLLECTION AUDIT_LOGS =====
+
+    match /audit_logs/{logId} {
+      // Lecture : admin uniquement
+      allow read: if isAdmin();
+
+      // Écriture : Cloud Functions uniquement (pas de règle allow)
+      allow write: if false;
+    }
+
+    // ===== COLLECTION STRUCTURES =====
+
+    match /structures/{structureId} {
+      // Lecture : membres de la structure ou admin
+      allow read: if isAdmin() ||
+                    (isApproved() &&
+                     resource.data.adminIds.hasAny([request.auth.uid]));
+
+      // Écriture : super admin uniquement
+      allow write: if isAdmin() &&
+                      request.auth.token.adminLevel == 'super';
+    }
+  }
+}
