@@ -5,10 +5,9 @@
  * Usage: npx ts-node src/scripts/seed-admin.ts
  */
 
-import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
+import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import * as path from 'path';
 
 // Configuration de l'admin à créer
 const ADMIN_CONFIG = {
@@ -20,20 +19,15 @@ const ADMIN_CONFIG = {
 async function seedAdmin() {
   console.warn('=== Création du compte administrateur ===\n');
 
-  // Initialiser Firebase Admin avec les credentials
-  const serviceAccountPath = path.resolve(__dirname, '../../service-account.json');
-
+  // Initialiser Firebase Admin avec Application Default Credentials
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const serviceAccount = require(serviceAccountPath) as ServiceAccount;
     initializeApp({
-      credential: cert(serviceAccount),
+      credential: applicationDefault(),
+      projectId: 'healthcare-f5da0',
     });
-  } catch {
-    console.error('Erreur: Fichier service-account.json non trouvé');
-    console.error(`Chemin attendu: ${serviceAccountPath}`);
-    console.error('\nTéléchargez-le depuis la console Firebase:');
-    console.error('Project Settings → Service Accounts → Generate New Private Key');
+  } catch (error) {
+    console.error('Erreur initialisation Firebase Admin:', error);
+    console.error('\nAssurez-vous que gcloud auth application-default login a été exécuté');
     process.exit(1);
   }
 

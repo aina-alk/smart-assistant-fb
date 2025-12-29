@@ -60,6 +60,7 @@ export interface StatusHistoryEntry {
 // ===== UTILISATEUR COMPLET =====
 
 export interface UserData {
+  id?: string;
   email: string;
   displayName: string;
   phone: string;
@@ -68,6 +69,7 @@ export interface UserData {
   status: UserStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  updatedBy?: string;
   callbackSlots: CallbackSlot[];
   callbackNote: string | null;
   interviewScheduledAt: Timestamp | null;
@@ -86,6 +88,15 @@ export interface UserData {
   secretaireData: SecretaireData | null;
   technicienData: TechnicienData | null;
   adminData: AdminData | null;
+  adminNotes?: Array<{ note: string; timestamp: string; by: string }>;
+}
+
+// ===== CUSTOM CLAIMS =====
+
+export interface CustomClaims {
+  role: UserRole;
+  status: UserStatus;
+  structureId: string | null;
 }
 
 // ===== AUDIT LOGS =====
@@ -98,21 +109,18 @@ export type AuditAction =
   | 'role_changed'
   | 'user_suspended';
 
-export interface AuditLogData {
+export interface AuditLog {
+  id?: string;
   action: AuditAction;
   targetUserId: string;
-  targetUserEmail: string;
   performedBy: string;
-  performedByEmail: string | null;
-  timestamp: Timestamp;
-  previousValue: Record<string, unknown>;
-  newValue: Record<string, unknown>;
-  metadata: {
-    ip: string | null;
-    userAgent: string | null;
-    source: 'admin_dashboard' | 'cloud_function' | 'api';
-  };
+  timestamp: Timestamp | FirebaseFirestore.Timestamp;
+  changes?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
+
+// Alias pour compatibilité
+export type AuditLogData = AuditLog;
 
 // ===== PARAMÈTRES CALLABLE FUNCTIONS =====
 

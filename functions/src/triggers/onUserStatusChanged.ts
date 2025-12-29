@@ -3,62 +3,60 @@
  * Déclenché lors de la mise à jour d'un document dans /users
  */
 
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import * as functions from 'firebase-functions';
 import { getAuth } from 'firebase-admin/auth';
 import { UserData, UserStatus } from '../types';
 import { sendWelcomeEmail, sendRejectionEmail } from '../services/email.service';
 import { createAuditLog } from '../services/audit.service';
 
-export const onUserStatusChanged = onDocumentUpdated('users/{userId}', async (event) => {
-  const beforeData = event.data?.before.data() as UserData | undefined;
-  const afterData = event.data?.after.data() as UserData | undefined;
+export const onUserStatusChanged = functions
+  .region('europe-west1')
+  .firestore.document('users/{userId}')
+  .onUpdate(async (change, context) => {
+    const beforeData = change.before.data() as UserData;
+    const afterData = change.after.data() as UserData;
 
-  if (!beforeData || !afterData) {
-    console.error('Données manquantes dans le snapshot');
-    return;
-  }
+    const userId = context.params.userId;
+    const oldStatus = beforeData.status;
+    const newStatus = afterData.status;
 
-  const userId = event.params.userId;
-  const oldStatus = beforeData.status;
-  const newStatus = afterData.status;
+    // Ne rien faire si le statut n'a pas changé
+    if (oldStatus === newStatus) {
+      return;
+    }
 
-  // Ne rien faire si le statut n'a pas changé
-  if (oldStatus === newStatus) {
-    return;
-  }
+    console.warn(`Changement de statut pour ${userId}: ${oldStatus} → ${newStatus}`);
 
-  console.warn(`Changement de statut pour ${userId}: ${oldStatus} → ${newStatus}`);
+    try {
+      // Mettre à jour les Custom Claims
+      await getAuth().setCustomUserClaims(userId, {
+        role: afterData.role,
+        status: newStatus,
+        structureId: afterData.structureId || null,
+      });
+      console.warn(`Custom Claims mis à jour pour ${userId}`);
 
-  try {
-    // Mettre à jour les Custom Claims
-    await getAuth().setCustomUserClaims(userId, {
-      role: afterData.role,
-      status: newStatus,
-      structureId: afterData.structureId || null,
-    });
-    console.warn(`Custom Claims mis à jour pour ${userId}`);
+      // Actions selon le nouveau statut
+      await handleStatusChange(userId, afterData, oldStatus, newStatus);
 
-    // Actions selon le nouveau statut
-    await handleStatusChange(userId, afterData, oldStatus, newStatus);
-
-    // Logger dans l'audit
-    await createAuditLog({
-      action: 'status_changed',
-      targetUserId: userId,
-      performedBy: afterData.updatedBy || 'system',
-      changes: {
-        oldStatus,
-        newStatus,
-      },
-      metadata: {
-        email: afterData.email,
-      },
-    });
-  } catch (error) {
-    console.error(`Erreur changement statut ${userId}:`, error);
-    throw error;
-  }
-});
+      // Logger dans l'audit
+      await createAuditLog({
+        action: 'status_changed',
+        targetUserId: userId,
+        performedBy: afterData.updatedBy || 'system',
+        changes: {
+          oldStatus,
+          newStatus,
+        },
+        metadata: {
+          email: afterData.email,
+        },
+      });
+    } catch (error) {
+      console.error(`Erreur changement statut ${userId}:`, error);
+      throw error;
+    }
+  });
 
 async function handleStatusChange(
   userId: string,

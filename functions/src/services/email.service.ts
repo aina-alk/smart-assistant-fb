@@ -3,7 +3,7 @@
  */
 
 import { Resend } from 'resend';
-import { config, resendApiKey } from '../config';
+import { config, getResendApiKey } from '../config';
 import { UserData } from '../types';
 import { getConfirmationEmailTemplate } from '../templates/confirmation';
 import { getAdminNotificationTemplate } from '../templates/admin-notification';
@@ -12,11 +12,12 @@ import { getRejectionEmailTemplate } from '../templates/rejection';
 
 let resendClient: Resend | null = null;
 
-function getResendClient(): Resend {
+function getResendClient(): Resend | null {
   if (!resendClient) {
-    const apiKey = resendApiKey.value();
+    const apiKey = getResendApiKey();
     if (!apiKey) {
-      throw new Error('RESEND_API_KEY non configurée');
+      console.warn('RESEND_API_KEY non configurée - emails désactivés');
+      return null;
     }
     resendClient = new Resend(apiKey);
   }
@@ -28,6 +29,10 @@ function getResendClient(): Resend {
  */
 export async function sendConfirmationEmail(user: UserData): Promise<void> {
   const resend = getResendClient();
+  if (!resend) {
+    console.warn(`[SKIP] Email de confirmation pour ${user.email} - Resend non configuré`);
+    return;
+  }
   const template = getConfirmationEmailTemplate(user);
 
   try {
@@ -49,6 +54,10 @@ export async function sendConfirmationEmail(user: UserData): Promise<void> {
  */
 export async function sendAdminNotification(user: UserData, userId: string): Promise<void> {
   const resend = getResendClient();
+  if (!resend) {
+    console.warn(`[SKIP] Notification admin pour ${user.email} - Resend non configuré`);
+    return;
+  }
   const template = getAdminNotificationTemplate(user, userId);
 
   try {
@@ -70,6 +79,10 @@ export async function sendAdminNotification(user: UserData, userId: string): Pro
  */
 export async function sendWelcomeEmail(user: UserData): Promise<void> {
   const resend = getResendClient();
+  if (!resend) {
+    console.warn(`[SKIP] Email bienvenue pour ${user.email} - Resend non configuré`);
+    return;
+  }
   const template = getWelcomeEmailTemplate(user);
 
   try {
@@ -91,6 +104,10 @@ export async function sendWelcomeEmail(user: UserData): Promise<void> {
  */
 export async function sendRejectionEmail(user: UserData): Promise<void> {
   const resend = getResendClient();
+  if (!resend) {
+    console.warn(`[SKIP] Email refus pour ${user.email} - Resend non configuré`);
+    return;
+  }
   const template = getRejectionEmailTemplate(user);
 
   try {
