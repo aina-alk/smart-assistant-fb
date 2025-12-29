@@ -168,8 +168,9 @@ export interface Structure {
 // ===== CUSTOM CLAIMS FIREBASE =====
 
 export interface CustomClaims {
-  role: UserRole;
-  status: UserStatus;
+  role: UserRole | null;
+  status: UserStatus | null;
+  structureId: string | null;
   adminLevel?: 'super' | 'structure';
 }
 

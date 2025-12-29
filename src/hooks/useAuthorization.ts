@@ -5,12 +5,53 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { getIdTokenResult } from 'firebase/auth';
+import { onAuthStateChanged, getIdTokenResult, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { useAuth } from '@/contexts/AuthContext';
-import { db, functions } from '@/lib/firebase/config';
-import type { CustomClaims, UserData, UserRole, UserStatus } from '@/types/user';
+import { auth, db, functions } from '@/lib/firebase/config';
+import type { CustomClaims, UserRole, UserStatus } from '@/types/user';
+
+// Type pour les données utilisateur Firestore
+interface UserData {
+  id: string;
+  email: string;
+  displayName: string;
+  phone: string;
+  role: UserRole;
+  status: UserStatus;
+  callbackSlots?: string[];
+  callbackNote?: string;
+  interviewNotes?: string;
+  medecinData?: {
+    rpps?: string;
+    specialty?: string;
+    sector?: number;
+  } | null;
+  secretaireData?: {
+    supervisorName?: string;
+    service?: string;
+  } | null;
+  technicienData?: {
+    specialization?: string;
+  } | null;
+  createdAt?: { toDate: () => Date };
+  updatedAt?: { toDate: () => Date };
+  approvedAt?: { toDate: () => Date } | null;
+  rejectedAt?: { toDate: () => Date } | null;
+  rejectionReason?: string | null;
+  statusHistory?: Array<{
+    status: UserStatus;
+    changedAt: { toDate: () => Date };
+    changedBy: string;
+    note?: string | null;
+  }>;
+  adminNotes?: Array<{
+    note: string;
+    timestamp: string;
+    by: string;
+  }>;
+  structureId?: string | null;
+}
 
 interface AuthorizationState {
   // État de chargement
@@ -32,39 +73,52 @@ interface AuthorizationState {
   refreshClaims: () => Promise<void>;
 }
 
+export type { UserData };
+
 export function useAuthorization(): AuthorizationState {
-  const { user } = useAuth();
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [claims, setClaims] = useState<CustomClaims | null>(null);
 
+  // Écouter l'état d'authentification Firebase
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      if (!user) {
+        setUserData(null);
+        setClaims(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Récupérer les Custom Claims
   const refreshClaims = useCallback(async () => {
-    if (!user) {
+    if (!firebaseUser) {
       setClaims(null);
       return;
     }
 
     try {
-      const tokenResult = await getIdTokenResult(user, true);
+      const tokenResult = await getIdTokenResult(firebaseUser, true);
       setClaims({
-        role: (tokenResult.claims.role as UserRole) || 'medecin',
-        status: (tokenResult.claims.status as UserStatus) || 'pending_call',
+        role: (tokenResult.claims.role as UserRole) || null,
+        status: (tokenResult.claims.status as UserStatus) || null,
         structureId: (tokenResult.claims.structureId as string) || null,
       });
     } catch (err) {
       console.error('Erreur récupération claims:', err);
       setError('Erreur de récupération des droits');
     }
-  }, [user]);
+  }, [firebaseUser]);
 
   // Écouter les changements du document utilisateur
   useEffect(() => {
-    if (!user) {
-      setUserData(null);
-      setClaims(null);
-      setIsLoading(false);
+    if (!firebaseUser) {
       return;
     }
 
@@ -76,7 +130,7 @@ export function useAuthorization(): AuthorizationState {
 
     // Écouter le document Firestore
     const unsubscribe = onSnapshot(
-      doc(db, 'users', user.uid),
+      doc(db, 'users', firebaseUser.uid),
       (snapshot) => {
         if (snapshot.exists()) {
           setUserData({ id: snapshot.id, ...snapshot.data() } as UserData);
@@ -93,7 +147,7 @@ export function useAuthorization(): AuthorizationState {
     );
 
     return () => unsubscribe();
-  }, [user, refreshClaims]);
+  }, [firebaseUser, refreshClaims]);
 
   // Rafraîchir les claims quand le statut change
   useEffect(() => {
