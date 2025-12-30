@@ -2,18 +2,21 @@
 
 /**
  * Hook pour récupérer les utilisateurs en temps réel (admin)
+ * Attend que l'auth soit prête avec les custom claims avant de faire des requêtes
  */
 
 import { useEffect, useState } from 'react';
 import {
   collection,
+  doc,
   query,
   where,
   orderBy,
   onSnapshot,
   type QueryConstraint,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase/config';
 import type { UserData } from '@/hooks/useAuthorization';
 import type { UserStatus } from '@/types/user';
 
@@ -40,8 +43,49 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
+  // Attendre que l'auth soit prête avec les claims synchronisés
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+
+          // Synchroniser les claims depuis Firestore si nécessaire
+          const syncResponse = await fetch('/api/auth/sync-claims', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+
+          const syncResult = await syncResponse.json();
+
+          // Si les claims ont été mis à jour, récupérer un nouveau token
+          if (syncResult.synced) {
+            await user.getIdToken(true);
+          }
+
+          setAuthReady(true);
+        } catch (err) {
+          console.error('Erreur sync claims:', err);
+          setError("Erreur d'authentification");
+          setIsLoading(false);
+        }
+      } else {
+        setAuthReady(false);
+        setUsers([]);
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Lancer la query Firestore seulement quand l'auth est prête
+  useEffect(() => {
+    if (!authReady) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -76,23 +120,62 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
     );
 
     return () => unsubscribe();
-  }, [statusFilter]);
+  }, [statusFilter, authReady]);
 
   return { users, isLoading, error };
 }
 
 /**
  * Hook pour récupérer un utilisateur spécifique
+ * Utilise une référence document directe (pas collection query)
  */
 export function useUserDetail(userId: string | null) {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    if (!userId) {
-      setUser(null);
-      setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
+        try {
+          const idToken = await authUser.getIdToken(true);
+
+          // Synchroniser les claims depuis Firestore si nécessaire
+          const syncResponse = await fetch('/api/auth/sync-claims', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+
+          const syncResult = await syncResponse.json();
+
+          if (syncResult.synced) {
+            await authUser.getIdToken(true);
+          }
+
+          setAuthReady(true);
+        } catch (err) {
+          console.error('Erreur sync claims:', err);
+          setError("Erreur d'authentification");
+          setIsLoading(false);
+        }
+      } else {
+        setAuthReady(false);
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !userId) {
+      if (!userId) {
+        setUser(null);
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -100,11 +183,10 @@ export function useUserDetail(userId: string | null) {
     setError(null);
 
     const unsubscribe = onSnapshot(
-      collection(db, 'users'),
+      doc(db, 'users', userId),
       (snapshot) => {
-        const doc = snapshot.docs.find((d) => d.id === userId);
-        if (doc) {
-          setUser({ id: doc.id, ...doc.data() } as UserData);
+        if (snapshot.exists()) {
+          setUser({ id: snapshot.id, ...snapshot.data() } as UserData);
         } else {
           setUser(null);
         }
@@ -118,7 +200,7 @@ export function useUserDetail(userId: string | null) {
     );
 
     return () => unsubscribe();
-  }, [userId]);
+  }, [userId, authReady]);
 
   return { user, isLoading, error };
 }

@@ -7,6 +7,7 @@
 import { LogOut, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useAuthorization } from '@/hooks/useAuthorization';
+import { getRoleLabel } from '@/lib/navigation/nav-config';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -59,7 +60,8 @@ export function UserMenu() {
           <div className="hidden flex-col items-start text-left md:flex">
             <span className="text-sm font-medium">{fullDisplayName}</span>
             <span className="text-xs text-muted-foreground">
-              {userData?.medecinData?.specialty || 'Médecin'}
+              {userData?.medecinData?.specialty ||
+                (userData?.role ? getRoleLabel(userData.role) : 'Utilisateur')}
             </span>
           </div>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
