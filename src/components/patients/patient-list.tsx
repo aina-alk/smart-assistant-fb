@@ -91,7 +91,11 @@ export function PatientList({
             </TableHeader>
             <TableBody>
               {patients.map((patient) => (
-                <TableRow key={patient.id}>
+                <TableRow
+                  key={patient.id}
+                  onClick={() => onView?.(patient)}
+                  className="cursor-pointer transition-colors hover:bg-muted/50"
+                >
                   <TableCell className="font-medium">{getPatientFullName(patient)}</TableCell>
                   <TableCell>
                     {formatDate(patient.dateNaissance)} ({getPatientAge(patient)} ans)
@@ -100,7 +104,7 @@ export function PatientList({
                     {patient.telephone ? formatFrenchPhone(patient.telephone) : '-'}
                   </TableCell>
                   <TableCell className="text-muted-foreground">-</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
