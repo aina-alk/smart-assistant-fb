@@ -64,7 +64,7 @@ function getRedirectUrl(
   currentPath: string,
   role?: UserRole
 ): string | null {
-  const publicPaths = ['/login', '/auth'];
+  const publicPaths = ['/', '/login', '/auth'];
   const registrationPaths = ['/inscription', '/demande-envoyee', '/en-attente', '/demande-refusee'];
 
   // Si loading, pas de redirection
@@ -72,9 +72,9 @@ function getRedirectUrl(
     return null;
   }
 
-  // Non authentifié : vers login (sauf si déjà sur page publique)
+  // Non authentifié : vers login (sauf si déjà sur page publique ou landing)
   if (state === 'unauthenticated') {
-    if (publicPaths.some((p) => currentPath.startsWith(p))) {
+    if (publicPaths.some((p) => currentPath === p || (p !== '/' && currentPath.startsWith(p)))) {
       return null;
     }
     return '/login';
