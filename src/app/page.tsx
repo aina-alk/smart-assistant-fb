@@ -1,15 +1,29 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useAuthorization } from '@/hooks/useAuthorization';
 import { toast } from 'sonner';
 import { LogOut, Loader2 } from 'lucide-react';
 
 export default function HomePage() {
+  const router = useRouter();
   const { user, loading, signOut } = useAuth();
+  const { isLoading: authzLoading, isMedecin, isApproved } = useAuthorization();
+
+  // Rediriger les médecins approuvés vers le dashboard
+  useEffect(() => {
+    if (loading || authzLoading) return;
+
+    if (user && isMedecin && isApproved) {
+      router.replace('/dashboard');
+    }
+  }, [loading, authzLoading, user, isMedecin, isApproved, router]);
 
   const handleSignOut = async () => {
     try {
@@ -21,7 +35,8 @@ export default function HomePage() {
     }
   };
 
-  if (loading) {
+  // Afficher le loader pendant le chargement ou la redirection
+  if (loading || authzLoading || (user && isMedecin && isApproved)) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

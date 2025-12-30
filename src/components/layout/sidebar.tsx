@@ -1,0 +1,48 @@
+/**
+ * Sidebar - Navigation principale (desktop)
+ */
+
+'use client';
+
+import Link from 'next/link';
+import { Stethoscope } from 'lucide-react';
+import { NavLinks } from './nav-links';
+import { cn } from '@/lib/utils';
+
+interface SidebarProps {
+  className?: string;
+}
+
+export function Sidebar({ className }: SidebarProps) {
+  return (
+    <aside
+      className={cn(
+        'fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-card lg:flex',
+        className
+      )}
+    >
+      {/* Logo */}
+      <div className="flex h-16 items-center gap-2 border-b px-6">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <Stethoscope className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold">Super Assistant</span>
+            <span className="text-xs text-muted-foreground">Médical</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto px-3 py-4">
+        <NavLinks />
+      </div>
+
+      {/* Footer */}
+      <div className="border-t p-4">
+        <p className="text-center text-xs text-muted-foreground">v0.1.0 — Beta</p>
+      </div>
+    </aside>
+  );
+}
