@@ -17,6 +17,18 @@ export type FirebaseConfig = {
   appId: string;
 };
 
+// Export des types Patient
+export type { Patient, PatientCreate, PatientUpdate, PatientSearchResult } from './patient';
+
+export {
+  NIR_SYSTEM,
+  MUTUELLE_SYSTEM,
+  patientToFHIR,
+  fhirToPatient,
+  getPatientFullName,
+  getPatientAge,
+} from './patient';
+
 // Export des types FHIR
 export type {
   // Base types
@@ -43,8 +55,8 @@ export type {
   Range,
   Ratio,
 
-  // Resources
-  Patient,
+  // Resources (FHIR Patient renommé pour éviter conflit avec Patient application)
+  Patient as FHIRPatient,
   PatientContact,
   PatientCommunication,
   PatientLink,
