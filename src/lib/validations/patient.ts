@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { validateNIR, validateFrenchPhone, cleanNIR, cleanPhone } from '@/lib/utils/validators';
+import { validateFrenchPhone, cleanNIR, cleanPhone } from '@/lib/utils/validators';
 
 // ============================================================================
 // Schéma Formulaire Patient (création/édition)
@@ -68,15 +68,10 @@ export const patientFormSchema = z.object({
     .optional()
     .or(z.literal('')),
 
+  // NIR temporairement sans validation stricte
   nir: z
     .string()
     .transform((val) => (val ? cleanNIR(val) : val))
-    .refine((val) => !val || val.length === 15, {
-      message: 'Le NIR doit contenir 15 caractères',
-    })
-    .refine((val) => !val || validateNIR(val), {
-      message: 'NIR invalide (vérifiez la clé de contrôle)',
-    })
     .optional()
     .or(z.literal('')),
 
