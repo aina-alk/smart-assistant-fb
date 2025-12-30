@@ -53,11 +53,11 @@ export default function PatientsPage() {
   };
 
   const handleView = (patient: Patient) => {
-    router.push(`/dashboard/patients/${patient.id}`);
+    router.push(`/medecin/patients/${patient.id}`);
   };
 
   const handleEdit = (patient: Patient) => {
-    router.push(`/dashboard/patients/${patient.id}/edit`);
+    router.push(`/medecin/patients/${patient.id}/edit`);
   };
 
   return (
@@ -68,7 +68,7 @@ export default function PatientsPage() {
           <h2 className="text-2xl font-bold tracking-tight">Patients</h2>
           <p className="text-muted-foreground">Gérez votre liste de patients</p>
         </div>
-        <Button onClick={() => router.push('/dashboard/patients/new')}>
+        <Button onClick={() => router.push('/medecin/patients/new')}>
           <Plus className="mr-2 h-4 w-4" />
           Nouveau patient
         </Button>

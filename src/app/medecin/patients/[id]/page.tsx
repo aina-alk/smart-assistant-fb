@@ -19,7 +19,7 @@ export default function PatientPage({ params }: PatientPageProps) {
   const { data: patient, isLoading, isError, error, refetch } = usePatient(id);
 
   const handleEdit = () => {
-    router.push(`/dashboard/patients/${id}/edit`);
+    router.push(`/medecin/patients/${id}/edit`);
   };
 
   // Loading state
@@ -45,7 +45,7 @@ export default function PatientPage({ params }: PatientPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <Button onClick={() => router.push('/dashboard/patients')}>
+              <Button onClick={() => router.push('/medecin/patients')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Retour à la liste
               </Button>
@@ -68,7 +68,7 @@ export default function PatientPage({ params }: PatientPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center gap-2">
-            <Button variant="outline" onClick={() => router.push('/dashboard/patients')}>
+            <Button variant="outline" onClick={() => router.push('/medecin/patients')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour
             </Button>

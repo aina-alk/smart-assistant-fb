@@ -1,6 +1,6 @@
 /**
- * DashboardGuard - Protège l'accès au dashboard
- * Seuls les médecins approuvés peuvent accéder
+ * RoleGuard - Protection d'accès par rôle
+ * Unifie la logique des anciens DashboardGuard et AdminGuard
  */
 
 'use client';
@@ -10,30 +10,34 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useAuthorization } from '@/hooks/useAuthorization';
+import type { UserRole } from '@/types/user';
 
-interface DashboardGuardProps {
+interface RoleGuardProps {
   children: React.ReactNode;
+  allowedRoles: UserRole[];
 }
 
-export function DashboardGuard({ children }: DashboardGuardProps) {
+export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const {
     isLoading: authzLoading,
-    isMedecin,
+    userData,
     isApproved,
     isPending,
     isRejected,
   } = useAuthorization();
 
   const isLoading = authLoading || authzLoading;
+  const userRole = userData?.role;
+  const hasAllowedRole = userRole ? allowedRoles.includes(userRole) : false;
 
   useEffect(() => {
     if (isLoading) return;
 
     // Non authentifié → login
     if (!user) {
-      router.replace('/login?redirect=/dashboard');
+      router.replace('/login');
       return;
     }
 
@@ -49,14 +53,13 @@ export function DashboardGuard({ children }: DashboardGuardProps) {
       return;
     }
 
-    // Non médecin ou non approuvé → accès refusé (retour login)
-    if (!isMedecin || !isApproved) {
+    // Pas le bon rôle ou non approuvé → accès refusé
+    if (!hasAllowedRole || !isApproved) {
       router.replace('/login');
       return;
     }
-  }, [isLoading, user, isMedecin, isApproved, isPending, isRejected, router]);
+  }, [isLoading, user, hasAllowedRole, isApproved, isPending, isRejected, router]);
 
-  // État de chargement
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -68,8 +71,7 @@ export function DashboardGuard({ children }: DashboardGuardProps) {
     );
   }
 
-  // Conditions non remplies (redirection en cours)
-  if (!user || !isMedecin || !isApproved) {
+  if (!user || !hasAllowedRole || !isApproved) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -80,6 +82,5 @@ export function DashboardGuard({ children }: DashboardGuardProps) {
     );
   }
 
-  // Accès autorisé
   return <>{children}</>;
 }

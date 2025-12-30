@@ -17,14 +17,14 @@ export default function NewPatientPage() {
     try {
       const result = await createPatient.mutateAsync(data);
       toast.success(`Patient ${result.patient.prenom} ${result.patient.nom} créé avec succès`);
-      router.push('/dashboard/patients');
+      router.push('/medecin/patients');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la création du patient');
     }
   };
 
   const handleCancel = () => {
-    router.push('/dashboard/patients');
+    router.push('/medecin/patients');
   };
 
   return (

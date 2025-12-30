@@ -1,17 +1,14 @@
 /**
- * Layout Admin - Protège toutes les routes /admin/*
+ * Admin Layout - Dashboard admin avec protection par rôle
  */
 
-import { AdminGuard } from '@/components/admin/admin-guard';
-import { AdminHeader } from '@/components/admin/admin-header';
+import { RoleGuard } from '@/components/guards';
+import { DashboardShell } from '@/components/layout';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminGuard>
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
-        <main className="container mx-auto px-4 py-8">{children}</main>
-      </div>
-    </AdminGuard>
+    <RoleGuard allowedRoles={['admin']}>
+      <DashboardShell role="admin">{children}</DashboardShell>
+    </RoleGuard>
   );
 }
