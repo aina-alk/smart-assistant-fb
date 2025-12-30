@@ -41,9 +41,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             photoURL: firebaseUser.photoURL,
           });
 
-          // Créer le cookie de session côté serveur
+          // Synchroniser les custom claims et créer la session
           try {
-            const idToken = await firebaseUser.getIdToken();
+            let idToken = await firebaseUser.getIdToken(true);
+
+            // Synchroniser les claims depuis Firestore si nécessaire
+            const syncResponse = await fetch('/api/auth/sync-claims', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ idToken }),
+            });
+
+            const syncResult = await syncResponse.json();
+
+            // Si les claims ont été mis à jour, récupérer un nouveau token
+            if (syncResult.synced) {
+              idToken = await firebaseUser.getIdToken(true);
+            }
+
+            // Créer le cookie de session avec le token final
             await fetch('/api/auth/session', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
