@@ -5,7 +5,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Stethoscope, ClipboardCheck, Wrench } from 'lucide-react';
+import { Stethoscope, ClipboardCheck, Wrench, Shield } from 'lucide-react';
 import type { RegistrationRole } from '@/types/registration';
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '@/types/registration';
 
@@ -19,9 +19,10 @@ const ROLE_ICONS: Record<RegistrationRole, React.ReactNode> = {
   medecin: <Stethoscope className="h-6 w-6" />,
   secretaire: <ClipboardCheck className="h-6 w-6" />,
   technicien: <Wrench className="h-6 w-6" />,
+  admin: <Shield className="h-6 w-6" />,
 };
 
-const ROLES: RegistrationRole[] = ['medecin', 'secretaire', 'technicien'];
+const ROLES: RegistrationRole[] = ['medecin', 'secretaire', 'technicien', 'admin'];
 
 export function RoleSelector({ value, onChange, error }: RoleSelectorProps) {
   return (

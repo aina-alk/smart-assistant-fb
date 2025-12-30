@@ -11,8 +11,15 @@ import type {
   MedecinRegistrationData,
   SecretaireRegistrationData,
   TechnicienRegistrationData,
+  AdminRegistrationData,
 } from '@/types/registration';
-import type { UserRole, MedecinData, SecretaireData, TechnicienData } from '@/types/user';
+import type {
+  UserRole,
+  MedecinData,
+  SecretaireData,
+  TechnicienData,
+  AdminData,
+} from '@/types/user';
 
 // ===== TYPES =====
 
@@ -27,6 +34,7 @@ interface CreateUserDocumentParams {
   medecinData: MedecinRegistrationData | null;
   secretaireData: SecretaireRegistrationData | null;
   technicienData: TechnicienRegistrationData | null;
+  adminData: AdminRegistrationData | null;
 }
 
 // ===== MAPPERS =====
@@ -78,6 +86,19 @@ function mapTechnicienData(data: TechnicienRegistrationData | null): TechnicienD
     specialization: data.specialization,
     certifications: [],
     supervisorId: null,
+  };
+}
+
+/**
+ * Mappe les données admin du formulaire vers le format Firestore
+ * Les champs level et managedStructures sont définis par l'admin lors de l'approbation
+ */
+function mapAdminData(data: AdminRegistrationData | null): AdminData | null {
+  if (!data) return null;
+
+  return {
+    level: 'structure',
+    managedStructures: [],
   };
 }
 
@@ -152,6 +173,15 @@ export async function createUserDocument(params: CreateUserDocumentParams): Prom
     medecinData: mapMedecinData(params.medecinData),
     secretaireData: mapSecretaireData(params.secretaireData),
     technicienData: mapTechnicienData(params.technicienData),
-    adminData: null,
+    adminData: mapAdminData(params.adminData),
+
+    // Données de demande admin (pour examen par l'organisation)
+    adminRequestData: params.adminData
+      ? {
+          organizationName: params.adminData.organizationName,
+          position: params.adminData.position,
+          requestReason: params.adminData.requestReason,
+        }
+      : null,
   });
 }

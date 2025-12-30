@@ -2,9 +2,9 @@
  * Types pour le formulaire d'inscription multi-étapes
  */
 
-// ===== RÔLES (exclut admin qui est attribué manuellement) =====
+// ===== RÔLES =====
 
-export type RegistrationRole = 'medecin' | 'secretaire' | 'technicien';
+export type RegistrationRole = 'medecin' | 'secretaire' | 'technicien' | 'admin';
 
 // ===== CRÉNEAUX DE RAPPEL =====
 
@@ -57,6 +57,12 @@ export interface TechnicienRegistrationData {
   specialization: TechnicianSpecialization;
 }
 
+export interface AdminRegistrationData {
+  organizationName: string;
+  position: string;
+  requestReason: string;
+}
+
 // ===== DONNÉES COMPLÈTES DU FORMULAIRE =====
 
 export interface RegistrationFormData {
@@ -70,6 +76,7 @@ export interface RegistrationFormData {
   medecinData: MedecinRegistrationData | null;
   secretaireData: SecretaireRegistrationData | null;
   technicienData: TechnicienRegistrationData | null;
+  adminData: AdminRegistrationData | null;
 
   // Étape 3 : Disponibilités & Consentement
   callbackSlots: CallbackSlot[];
@@ -96,6 +103,7 @@ export const DEFAULT_REGISTRATION_DATA: RegistrationFormData = {
   medecinData: null,
   secretaireData: null,
   technicienData: null,
+  adminData: null,
   callbackSlots: [],
   callbackNote: '',
   acceptContact: false,
@@ -119,12 +127,14 @@ export const ROLE_LABELS: Record<RegistrationRole, string> = {
   medecin: 'Médecin',
   secretaire: 'Secrétaire médical(e)',
   technicien: 'Technicien(ne) de santé',
+  admin: 'Administrateur',
 };
 
 export const ROLE_DESCRIPTIONS: Record<RegistrationRole, string> = {
   medecin: 'Médecin généraliste ou spécialiste avec numéro RPPS',
   secretaire: 'Secrétaire médical(e) rattaché(e) à un médecin',
   technicien: 'Professionnel de santé technique (audioprothésiste, etc.)',
+  admin: 'Gestionnaire de cabinet ou structure médicale',
 };
 
 export const SECTOR_LABELS: Record<1 | 2, string> = {
