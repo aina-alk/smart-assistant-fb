@@ -33,7 +33,10 @@ export function PatientCard({ patient, onView, onEdit }: PatientCardProps) {
   };
 
   return (
-    <Card>
+    <Card
+      onClick={() => onView?.(patient)}
+      className="cursor-pointer transition-colors hover:bg-muted/50"
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -53,24 +56,26 @@ export function PatientCard({ patient, onView, onEdit }: PatientCardProps) {
               </div>
             )}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onView?.(patient)}>
-                <Eye className="mr-2 h-4 w-4" />
-                Voir
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit?.(patient)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Modifier
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onView?.(patient)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Voir
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit?.(patient)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Modifier
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardContent>
     </Card>
