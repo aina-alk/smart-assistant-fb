@@ -32,6 +32,7 @@ export function RegistrationForm() {
     updateMedecinData,
     updateSecretaireData,
     updateTechnicienData,
+    updateAdminData,
     setRole,
     toggleCallbackSlot,
     submit,
@@ -89,11 +90,13 @@ export function RegistrationForm() {
               medecinData={formData.medecinData}
               secretaireData={formData.secretaireData}
               technicienData={formData.technicienData}
+              adminData={formData.adminData}
               errors={errors}
               onRoleChange={setRole}
               onMedecinUpdate={updateMedecinData}
               onSecretaireUpdate={updateSecretaireData}
               onTechnicienUpdate={updateTechnicienData}
+              onAdminUpdate={updateAdminData}
             />
           )}
 

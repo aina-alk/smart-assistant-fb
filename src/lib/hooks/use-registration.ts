@@ -17,6 +17,7 @@ import type {
   MedecinRegistrationData,
   SecretaireRegistrationData,
   TechnicienRegistrationData,
+  AdminRegistrationData,
 } from '@/types/registration';
 
 // ===== CONSTANTES =====
@@ -50,6 +51,7 @@ interface UseRegistrationReturn {
   updateMedecinData: (data: Partial<MedecinRegistrationData>) => void;
   updateSecretaireData: (data: Partial<SecretaireRegistrationData>) => void;
   updateTechnicienData: (data: Partial<TechnicienRegistrationData>) => void;
+  updateAdminData: (data: Partial<AdminRegistrationData>) => void;
   setRole: (role: RegistrationRole) => void;
   toggleCallbackSlot: (slot: CallbackSlot) => void;
 
@@ -74,6 +76,7 @@ const getDefaultFormData = (): RegistrationFormData => ({
   medecinData: null,
   secretaireData: null,
   technicienData: null,
+  adminData: null,
   callbackSlots: [],
   callbackNote: '',
   acceptContact: false,
@@ -179,6 +182,8 @@ export function useRegistration(): UseRegistrationReturn {
         medecinData: role === 'medecin' ? { rpps: '', specialty: 'ORL', sector: 1 } : null,
         secretaireData: role === 'secretaire' ? { supervisorName: '' } : null,
         technicienData: role === 'technicien' ? { specialization: 'Audioprothésiste' } : null,
+        adminData:
+          role === 'admin' ? { organizationName: '', position: '', requestReason: '' } : null,
       };
       return newData;
     });
@@ -203,6 +208,13 @@ export function useRegistration(): UseRegistrationReturn {
     setFormData((prev) => ({
       ...prev,
       technicienData: prev.technicienData ? { ...prev.technicienData, ...data } : null,
+    }));
+  }, []);
+
+  const updateAdminData = useCallback((data: Partial<AdminRegistrationData>) => {
+    setFormData((prev) => ({
+      ...prev,
+      adminData: prev.adminData ? { ...prev.adminData, ...data } : null,
     }));
   }, []);
 
@@ -314,6 +326,7 @@ export function useRegistration(): UseRegistrationReturn {
         medecinData: formData.medecinData,
         secretaireData: formData.secretaireData,
         technicienData: formData.technicienData,
+        adminData: formData.adminData,
       });
 
       // Nettoyer le localStorage
@@ -355,6 +368,7 @@ export function useRegistration(): UseRegistrationReturn {
     updateMedecinData,
     updateSecretaireData,
     updateTechnicienData,
+    updateAdminData,
     setRole,
     toggleCallbackSlot,
     validateCurrentStep,

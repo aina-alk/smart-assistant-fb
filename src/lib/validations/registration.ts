@@ -87,15 +87,36 @@ export const technicienDataSchema = z.object({
 
 export type TechnicienDataFormData = z.infer<typeof technicienDataSchema>;
 
+// Sous-schéma admin
+export const adminDataSchema = z.object({
+  organizationName: z
+    .string()
+    .min(2, "Le nom de l'organisation doit contenir au moins 2 caractères")
+    .max(200, "Le nom de l'organisation ne peut pas dépasser 200 caractères"),
+
+  position: z
+    .string()
+    .min(2, 'La fonction doit contenir au moins 2 caractères')
+    .max(100, 'La fonction ne peut pas dépasser 100 caractères'),
+
+  requestReason: z
+    .string()
+    .min(10, 'Le motif doit contenir au moins 10 caractères')
+    .max(500, 'Le motif ne peut pas dépasser 500 caractères'),
+});
+
+export type AdminDataFormData = z.infer<typeof adminDataSchema>;
+
 // Schéma profil complet (avec rôle)
 export const profileSchema = z
   .object({
-    role: z.enum(['medecin', 'secretaire', 'technicien'], {
+    role: z.enum(['medecin', 'secretaire', 'technicien', 'admin'], {
       errorMap: () => ({ message: 'Veuillez sélectionner votre profil' }),
     }),
     medecinData: medecinDataSchema.nullable(),
     secretaireData: secretaireDataSchema.nullable(),
     technicienData: technicienDataSchema.nullable(),
+    adminData: adminDataSchema.nullable(),
   })
   .superRefine((data, ctx) => {
     // Validation conditionnelle selon le rôle
@@ -121,6 +142,14 @@ export const profileSchema = z
           code: z.ZodIssueCode.custom,
           message: 'Les informations technicien sont requises',
           path: ['technicienData'],
+        });
+      }
+    } else if (data.role === 'admin') {
+      if (!data.adminData) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Les informations administrateur sont requises',
+          path: ['adminData'],
         });
       }
     }
@@ -166,12 +195,13 @@ export type AvailabilityFormData = z.infer<typeof availabilitySchema>;
 // ===== SCHÉMA DE BASE POUR PROFIL (sans superRefine, pour merge) =====
 
 const profileSchemaBase = z.object({
-  role: z.enum(['medecin', 'secretaire', 'technicien'], {
+  role: z.enum(['medecin', 'secretaire', 'technicien', 'admin'], {
     errorMap: () => ({ message: 'Veuillez sélectionner votre profil' }),
   }),
   medecinData: medecinDataSchema.nullable(),
   secretaireData: secretaireDataSchema.nullable(),
   technicienData: technicienDataSchema.nullable(),
+  adminData: adminDataSchema.nullable(),
 });
 
 // ===== SCHÉMA COMPLET (pour types uniquement) =====
@@ -218,6 +248,7 @@ export function getStepData(step: number, data: Record<string, unknown>): Record
         medecinData: data.medecinData,
         secretaireData: data.secretaireData,
         technicienData: data.technicienData,
+        adminData: data.adminData,
       };
     case 2:
       return {

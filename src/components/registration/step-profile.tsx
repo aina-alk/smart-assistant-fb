@@ -10,11 +10,13 @@ import { RoleSelector } from './role-selector';
 import { MedecinFields } from './medecin-fields';
 import { SecretaireFields } from './secretaire-fields';
 import { TechnicienFields } from './technicien-fields';
+import { AdminFields } from './admin-fields';
 import type {
   RegistrationRole,
   MedecinRegistrationData,
   SecretaireRegistrationData,
   TechnicienRegistrationData,
+  AdminRegistrationData,
 } from '@/types/registration';
 
 interface StepProfileProps {
@@ -22,11 +24,13 @@ interface StepProfileProps {
   medecinData: MedecinRegistrationData | null;
   secretaireData: SecretaireRegistrationData | null;
   technicienData: TechnicienRegistrationData | null;
+  adminData: AdminRegistrationData | null;
   errors: Record<string, string>;
   onRoleChange: (role: RegistrationRole) => void;
   onMedecinUpdate: (data: Partial<MedecinRegistrationData>) => void;
   onSecretaireUpdate: (data: Partial<SecretaireRegistrationData>) => void;
   onTechnicienUpdate: (data: Partial<TechnicienRegistrationData>) => void;
+  onAdminUpdate: (data: Partial<AdminRegistrationData>) => void;
 }
 
 export function StepProfile({
@@ -34,11 +38,13 @@ export function StepProfile({
   medecinData,
   secretaireData,
   technicienData,
+  adminData,
   errors,
   onRoleChange,
   onMedecinUpdate,
   onSecretaireUpdate,
   onTechnicienUpdate,
+  onAdminUpdate,
 }: StepProfileProps) {
   return (
     <div className="space-y-6">
@@ -74,6 +80,10 @@ export function StepProfile({
 
       {role === 'technicien' && (
         <TechnicienFields data={technicienData} errors={errors} onUpdate={onTechnicienUpdate} />
+      )}
+
+      {role === 'admin' && (
+        <AdminFields data={adminData} errors={errors} onUpdate={onAdminUpdate} />
       )}
     </div>
   );
