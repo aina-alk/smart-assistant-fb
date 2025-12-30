@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const SESSION_COOKIE_NAME = 'session';
 
 // Routes publiques (ne nécessitent pas d'authentification)
-const PUBLIC_PATHS = ['/login', '/api/auth', '/auth/email-link/callback'];
+const PUBLIC_PATHS = ['/', '/login', '/api/auth', '/auth/email-link/callback'];
 
 // Fichiers statiques et assets Next.js à ignorer
 const IGNORED_PATHS = ['/_next', '/favicon.ico', '/api/health'];
@@ -27,7 +27,10 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
 
   // Si pas de session et tentative d'accès à une route protégée
-  if (!sessionCookie && !PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+  const isPublicPath = PUBLIC_PATHS.some(
+    (path) => pathname === path || (path !== '/' && pathname.startsWith(path))
+  );
+  if (!sessionCookie && !isPublicPath) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
