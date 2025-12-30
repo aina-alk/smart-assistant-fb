@@ -108,12 +108,12 @@ function getRedirectUrl(state: AuthorizationState, currentPath: string): string 
     return '/compte-suspendu';
   }
 
-  // Approuvé : vers dashboard (si sur page inscription/attente)
+  // Approuvé : vers dashboard (si sur page d'accueil ou inscription/attente)
   if (state === 'approved') {
-    if (registrationPaths.some((p) => currentPath.startsWith(p))) {
+    if (currentPath === '/' || registrationPaths.some((p) => currentPath.startsWith(p))) {
       return '/dashboard';
     }
-    // Si déjà sur une page protégée ou publique, pas de redirection
+    // Si déjà sur une page protégée, pas de redirection
     return null;
   }
 
