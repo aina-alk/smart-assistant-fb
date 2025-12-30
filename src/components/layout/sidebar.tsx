@@ -1,5 +1,6 @@
 /**
  * Sidebar - Navigation principale (desktop)
+ * Accepte navItems et homeHref pour navigation dynamique par rôle
  */
 
 'use client';
@@ -8,12 +9,15 @@ import Link from 'next/link';
 import { Stethoscope } from 'lucide-react';
 import { NavLinks } from './nav-links';
 import { cn } from '@/lib/utils';
+import type { NavItem } from '@/lib/navigation/nav-config';
 
 interface SidebarProps {
+  navItems: NavItem[];
+  homeHref: string;
   className?: string;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ navItems, homeHref, className }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -23,7 +27,7 @@ export function Sidebar({ className }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href={homeHref} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Stethoscope className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -36,7 +40,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        <NavLinks />
+        <NavLinks items={navItems} homeHref={homeHref} />
       </div>
 
       {/* Footer */}

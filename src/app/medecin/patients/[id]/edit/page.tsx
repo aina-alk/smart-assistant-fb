@@ -26,14 +26,14 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
     try {
       await updatePatient.mutateAsync({ id, data });
       toast.success('Patient modifié avec succès');
-      router.push(`/dashboard/patients/${id}`);
+      router.push(`/medecin/patients/${id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erreur lors de la modification');
     }
   };
 
   const handleCancel = () => {
-    router.push(`/dashboard/patients/${id}`);
+    router.push(`/medecin/patients/${id}`);
   };
 
   // Loading state
@@ -59,7 +59,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <Button onClick={() => router.push('/dashboard/patients')}>
+              <Button onClick={() => router.push('/medecin/patients')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Retour à la liste
               </Button>
@@ -82,7 +82,7 @@ export default function EditPatientPage({ params }: EditPatientPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center gap-2">
-            <Button variant="outline" onClick={() => router.push('/dashboard/patients')}>
+            <Button variant="outline" onClick={() => router.push('/medecin/patients')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour
             </Button>

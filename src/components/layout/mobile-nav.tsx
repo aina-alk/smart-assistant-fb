@@ -1,5 +1,6 @@
 /**
  * MobileNav - Navigation mobile avec Sheet
+ * Accepte navItems et homeHref pour navigation dynamique par rôle
  */
 
 'use client';
@@ -9,8 +10,14 @@ import { Stethoscope } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NavLinks } from './nav-links';
 import { useUIStore } from '@/lib/stores/ui-store';
+import type { NavItem } from '@/lib/navigation/nav-config';
 
-export function MobileNav() {
+interface MobileNavProps {
+  navItems: NavItem[];
+  homeHref: string;
+}
+
+export function MobileNav({ navItems, homeHref }: MobileNavProps) {
   const { sidebarOpen, closeSidebar } = useUIStore();
 
   return (
@@ -18,7 +25,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72 p-0">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle asChild>
-            <Link href="/dashboard" onClick={closeSidebar} className="flex items-center gap-2">
+            <Link href={homeHref} onClick={closeSidebar} className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                 <Stethoscope className="h-5 w-5 text-primary-foreground" />
               </div>
@@ -31,7 +38,7 @@ export function MobileNav() {
         </SheetHeader>
 
         <div className="px-3 py-4">
-          <NavLinks onNavigate={closeSidebar} />
+          <NavLinks items={navItems} homeHref={homeHref} onNavigate={closeSidebar} />
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 border-t p-4">

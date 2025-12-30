@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useUserDocument } from '@/lib/hooks/use-user-document';
 import type { AuthorizationState } from '@/types/registration';
-import type { User, UserStatus } from '@/types/user';
+import type { User, UserRole, UserStatus } from '@/types/user';
 
 interface UseAuthorizationStatusReturn {
   /** État d'autorisation pour le routage */
@@ -57,9 +57,13 @@ function mapStatusToState(status: UserStatus): AuthorizationState {
 }
 
 /**
- * Détermine l'URL de redirection selon l'état
+ * Détermine l'URL de redirection selon l'état et le rôle
  */
-function getRedirectUrl(state: AuthorizationState, currentPath: string): string | null {
+function getRedirectUrl(
+  state: AuthorizationState,
+  currentPath: string,
+  role?: UserRole
+): string | null {
   const publicPaths = ['/login', '/auth'];
   const registrationPaths = ['/inscription', '/demande-envoyee', '/en-attente', '/demande-refusee'];
 
@@ -108,10 +112,15 @@ function getRedirectUrl(state: AuthorizationState, currentPath: string): string 
     return '/compte-suspendu';
   }
 
-  // Approuvé : vers dashboard (si sur page d'accueil ou inscription/attente)
-  if (state === 'approved') {
-    if (currentPath === '/' || registrationPaths.some((p) => currentPath.startsWith(p))) {
-      return '/dashboard';
+  // Approuvé : vers dashboard du rôle (si sur page d'accueil, /dashboard ou inscription/attente)
+  if (state === 'approved' && role) {
+    const roleHome = `/${role}`;
+    if (
+      currentPath === '/' ||
+      currentPath === '/dashboard' ||
+      registrationPaths.some((p) => currentPath.startsWith(p))
+    ) {
+      return roleHome;
     }
     // Si déjà sur une page protégée, pas de redirection
     return null;
@@ -156,8 +165,8 @@ export function useAuthorizationStatus(currentPath: string = '/'): UseAuthorizat
 
   // Calculer la redirection
   const redirectTo = useMemo(() => {
-    return getRedirectUrl(state, currentPath);
-  }, [state, currentPath]);
+    return getRedirectUrl(state, currentPath, userDoc?.role);
+  }, [state, currentPath, userDoc?.role]);
 
   return {
     state,
