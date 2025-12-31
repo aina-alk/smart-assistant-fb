@@ -116,8 +116,9 @@ export type {
   DiagnosticReportMedia,
 } from './fhir';
 
-// Export des types Codage (CIM-10)
+// Export des types Codage (CIM-10, NGAP, CCAM)
 export type {
+  // CIM-10
   CIM10Category,
   CIM10Code,
   DiagnosticSuggestion,
@@ -127,11 +128,34 @@ export type {
   CIM10SearchResponse,
   CIM10ExtractRequest,
   CIM10ExtractResponse,
+  // NGAP
+  NGAPType,
+  NGAPCode,
+  NGAPSearchResponse,
+  // CCAM
+  CCAMRegroupement,
+  CCAMCode,
+  CCAMSearchResponse,
+  // Codage Consultation
+  ActeType,
+  ActeFacturable,
+  ActeSuggestion,
+  CodageConsultation,
+  CodageSuggestionResult,
+  CodageSuggestRequest,
+  CodageSuggestResponse,
 } from './codage';
 
 export {
+  // CIM-10 schemas
   cim10CodeSchema,
   diagnosticSuggestionSchema,
   cim10ExtractionResultSchema,
   cim10ExtractRequestSchema,
+  // NGAP/CCAM schemas
+  ngapCodeSchema,
+  ccamCodeSchema,
+  acteSuggestionSchema,
+  codageSuggestionResultSchema,
+  codageSuggestRequestSchema,
 } from './codage';
