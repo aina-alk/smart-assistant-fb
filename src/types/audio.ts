@@ -65,6 +65,10 @@ export function getMediaRecorderConfig(): MediaRecorderConfig {
  * Formate une durée en secondes en MM:SS
  */
 export function formatTime(seconds: number): string {
+  // Guard against non-finite values (Infinity, NaN)
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return '0:00';
+  }
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;

@@ -18,16 +18,19 @@ export function AudioTimeline({
   onSeek,
   disabled = false,
 }: AudioTimelineProps) {
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  // Guard against non-finite duration
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const safeCurrentTime = Number.isFinite(currentTime) ? currentTime : 0;
+  const progress = safeDuration > 0 ? (safeCurrentTime / safeDuration) * 100 : 0;
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled || !onSeek || duration === 0) return;
+    if (disabled || !onSeek || safeDuration === 0) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const clickProgress = x / rect.width;
-    const seekTime = clickProgress * duration;
-    onSeek(Math.max(0, Math.min(duration, seekTime)));
+    const seekTime = clickProgress * safeDuration;
+    onSeek(Math.max(0, Math.min(safeDuration, seekTime)));
   };
 
   return (
@@ -43,7 +46,7 @@ export function AudioTimeline({
           className="absolute left-0 top-0 h-full bg-primary transition-all duration-100"
           style={{ width: `${progress}%` }}
         />
-        {!disabled && duration > 0 && (
+        {!disabled && safeDuration > 0 && (
           <div
             className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-background shadow-sm"
             style={{ left: `${progress}%` }}
