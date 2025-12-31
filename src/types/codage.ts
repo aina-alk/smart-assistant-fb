@@ -114,7 +114,24 @@ export interface NGAPCode {
 // CCAM Types
 // ============================================================================
 
-export type CCAMRegroupement = 'ATM' | 'ENS' | 'VNG' | 'ACT' | 'CHI';
+export type CCAMRegroupement =
+  // Legacy (codes existants)
+  | 'ATM' // Audiométrie (legacy)
+  | 'ENS' // Endoscopie (legacy)
+  | 'VNG' // Vidéonystagmographie (legacy)
+  | 'ACT' // Actes techniques courants (legacy)
+  | 'CHI' // Chirurgie ORL courante (legacy)
+  // Nouveaux regroupements ORL étendus
+  | 'AUD' // Audiométrie
+  | 'VES' // Vestibulaire
+  | 'ORE' // Oreille (chirurgie)
+  | 'NEZ' // Nez et Sinus
+  | 'LAR' // Larynx et Pharynx
+  | 'CER' // Cervical
+  | 'THY' // Thyroïde
+  | 'SAL' // Glandes salivaires
+  | 'TRA' // Trachée
+  | 'DIV'; // Divers ORL
 
 export interface CCAMCode {
   code: string;
@@ -201,7 +218,25 @@ export const ccamCodeSchema = z.object({
   code: z.string().regex(/^[A-Z]{4}\d{3}$/, 'Format de code CCAM invalide'),
   libelle: z.string().min(1),
   tarif_base: z.number().positive(),
-  regroupement: z.enum(['ATM', 'ENS', 'VNG', 'ACT', 'CHI']),
+  regroupement: z.enum([
+    // Legacy
+    'ATM',
+    'ENS',
+    'VNG',
+    'ACT',
+    'CHI',
+    // Nouveaux regroupements ORL
+    'AUD',
+    'VES',
+    'ORE',
+    'NEZ',
+    'LAR',
+    'CER',
+    'THY',
+    'SAL',
+    'TRA',
+    'DIV',
+  ]),
   modificateurs: z.array(z.string()).optional(),
 });
 

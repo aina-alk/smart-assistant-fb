@@ -7,9 +7,27 @@ import type { CCAMSearchResponse, CCAMRegroupement } from '@/types/codage';
 const searchParamsSchema = z.object({
   q: z.string().optional(),
   limit: z.coerce.number().min(1).max(50).optional().default(20),
-  regroupement: z.enum(['ATM', 'ENS', 'VNG', 'ACT', 'CHI']).optional() as z.ZodOptional<
-    z.ZodEnum<[CCAMRegroupement, ...CCAMRegroupement[]]>
-  >,
+  regroupement: z
+    .enum([
+      // Legacy
+      'ATM',
+      'ENS',
+      'VNG',
+      'ACT',
+      'CHI',
+      // Nouveaux regroupements ORL
+      'AUD',
+      'VES',
+      'ORE',
+      'NEZ',
+      'LAR',
+      'CER',
+      'THY',
+      'SAL',
+      'TRA',
+      'DIV',
+    ])
+    .optional() as z.ZodOptional<z.ZodEnum<[CCAMRegroupement, ...CCAMRegroupement[]]>>,
 });
 
 export async function GET(request: NextRequest) {
