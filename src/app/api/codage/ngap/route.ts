@@ -7,7 +7,7 @@ import type { NGAPSearchResponse } from '@/types/codage';
 const searchParamsSchema = z.object({
   q: z.string().optional(),
   limit: z.coerce.number().min(1).max(50).optional().default(20),
-  type: z.enum(['consultation', 'majoration']).optional(),
+  type: z.enum(['consultation', 'majoration', 'acte', 'bilan', 'reeducation', 'soins']).optional(),
 });
 
 export async function GET(request: NextRequest) {
