@@ -29,6 +29,20 @@ export {
   getPatientAge,
 } from './patient';
 
+// Export des types Transcription
+export type {
+  TranscriptionStatus,
+  TranscriptionErrorCode,
+  TranscriptionResult,
+  TranscriptionConfig,
+  Utterance,
+  StartTranscriptionResponse,
+  GetTranscriptionResponse,
+  TranscriptionErrorResponse,
+} from './transcription';
+
+export { TRANSCRIPTION_ERROR_MESSAGES } from './transcription';
+
 // Export des types FHIR
 export type {
   // Base types
