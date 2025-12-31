@@ -64,8 +64,10 @@ export async function POST(request: NextRequest) {
     suggestions.actes = suggestions.actes
       .map((acte) => {
         if (acte.type === 'NGAP') {
-          const fullCode = getNGAPByCode(acte.code);
-          if (fullCode) {
+          const matches = getNGAPByCode(acte.code);
+          if (matches.length > 0) {
+            // Prendre le premier match pour l'enrichissement des données
+            const fullCode = matches[0];
             return { ...acte, libelle: fullCode.libelle, tarif_base: fullCode.tarif_base };
           }
         } else {
@@ -77,7 +79,8 @@ export async function POST(request: NextRequest) {
         return acte;
       })
       .filter((acte) => {
-        const exists = acte.type === 'NGAP' ? getNGAPByCode(acte.code) : getCCAMByCode(acte.code);
+        const exists =
+          acte.type === 'NGAP' ? getNGAPByCode(acte.code).length > 0 : getCCAMByCode(acte.code);
         if (!exists) {
           console.warn(`Code ${acte.type} invalide ignoré: ${acte.code}`);
         }
