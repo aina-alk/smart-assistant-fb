@@ -126,18 +126,28 @@ export async function POST(request: NextRequest) {
 
     const suggestions = parseCIM10ExtractionResponse(responseText);
 
-    // Enrichir les suggestions avec les données complètes des codes
+    // Enrichir et filtrer les suggestions avec les données complètes des codes
     if (suggestions.principal) {
       const fullCode = getCIM10ByCode(suggestions.principal.code);
       if (fullCode) {
         suggestions.principal.libelle = fullCode.libelle;
+      } else {
+        // Code non trouvé dans le référentiel local, on le supprime
+        console.warn(`Code CIM-10 principal invalide ignoré: ${suggestions.principal.code}`);
+        suggestions.principal = null;
       }
     }
 
-    suggestions.secondaires = suggestions.secondaires.map((s) => {
-      const fullCode = getCIM10ByCode(s.code);
-      return fullCode ? { ...s, libelle: fullCode.libelle } : s;
-    });
+    suggestions.secondaires = suggestions.secondaires
+      .map((s) => {
+        const fullCode = getCIM10ByCode(s.code);
+        if (fullCode) {
+          return { ...s, libelle: fullCode.libelle };
+        }
+        console.warn(`Code CIM-10 secondaire invalide ignoré: ${s.code}`);
+        return null;
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null);
 
     const response: CIM10ExtractResponse = {
       suggestions,

@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Search, Sparkles, X, Check, Loader2, AlertCircle } from 'lucide-react';
+import { useDebounce } from '@/lib/hooks/use-debounce';
+import { getCIM10ByCode } from '@/lib/constants/cim10-codes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,26 +36,6 @@ interface DiagnosticSelectorProps {
 }
 
 type ExtractionStatus = 'idle' | 'loading' | 'success' | 'error';
-
-// ============================================================================
-// Hooks
-// ============================================================================
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 // ============================================================================
 // Component
@@ -194,7 +176,10 @@ export function DiagnosticSelector({
 
   const applySuggestion = useCallback(
     (suggestion: DiagnosticSuggestion) => {
-      const code: CIM10Code = {
+      // Enrichir avec les vraies métadonnées depuis le référentiel
+      const fullCode = getCIM10ByCode(suggestion.code);
+
+      const code: CIM10Code = fullCode ?? {
         code: suggestion.code,
         libelle: suggestion.libelle,
         libelle_court: suggestion.libelle,

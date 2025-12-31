@@ -209,7 +209,7 @@ export const acteSuggestionSchema = z.object({
   type: z.enum(['NGAP', 'CCAM']),
   code: z.string(),
   libelle: z.string(),
-  tarif_base: z.number(),
+  tarif_base: z.number().positive(),
   confiance: z.number().min(0).max(1),
   raison: z.string().optional(),
 });
