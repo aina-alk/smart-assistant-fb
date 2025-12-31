@@ -22,8 +22,21 @@ export function useAudioPlayer() {
     audioRef.current = audio;
 
     const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsReady(true);
+      // Guard against non-finite duration (can happen with some blob URLs)
+      const duration = audio.duration;
+      if (Number.isFinite(duration) && duration > 0) {
+        setDuration(duration);
+        setIsReady(true);
+      }
+    };
+
+    // Fallback: use durationchange event for blobs that don't report duration immediately
+    const handleDurationChange = () => {
+      const duration = audio.duration;
+      if (Number.isFinite(duration) && duration > 0) {
+        setDuration(duration);
+        setIsReady(true);
+      }
     };
 
     const handleTimeUpdate = () => {
@@ -36,11 +49,13 @@ export function useAudioPlayer() {
     };
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
@@ -74,7 +89,16 @@ export function useAudioPlayer() {
   const seek = useCallback(
     (time: number) => {
       if (audioRef.current && isReady) {
-        const clampedTime = Math.max(0, Math.min(time, audioRef.current.duration));
+        const duration = audioRef.current.duration;
+        // Guard against non-finite duration (Infinity, NaN)
+        if (!Number.isFinite(duration) || duration <= 0) {
+          return;
+        }
+        // Guard against non-finite time input
+        if (!Number.isFinite(time)) {
+          return;
+        }
+        const clampedTime = Math.max(0, Math.min(time, duration));
         audioRef.current.currentTime = clampedTime;
         setCurrentTime(clampedTime);
       }
