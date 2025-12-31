@@ -43,6 +43,26 @@ export type {
 
 export { TRANSCRIPTION_ERROR_MESSAGES } from './transcription';
 
+// Export des types Generation (CRC)
+export type {
+  CRCExamen,
+  CRCGenerated,
+  PatientContext,
+  GenerateCRCOptions,
+  ClaudeClientOptions,
+  GenerateCRCResponse,
+  GenerationErrorResponse,
+  GenerationErrorCode,
+} from './generation';
+
+export {
+  crcExamenSchema,
+  crcGeneratedSchema,
+  patientContextSchema,
+  generateCRCOptionsSchema,
+  GENERATION_ERROR_MESSAGES,
+} from './generation';
+
 // Export des types FHIR
 export type {
   // Base types
@@ -95,3 +115,23 @@ export type {
   DiagnosticReport,
   DiagnosticReportMedia,
 } from './fhir';
+
+// Export des types Codage (CIM-10)
+export type {
+  CIM10Category,
+  CIM10Code,
+  DiagnosticSuggestion,
+  DiagnosticSelection,
+  CIM10ExtractionResult,
+  CIM10SearchParams,
+  CIM10SearchResponse,
+  CIM10ExtractRequest,
+  CIM10ExtractResponse,
+} from './codage';
+
+export {
+  cim10CodeSchema,
+  diagnosticSuggestionSchema,
+  cim10ExtractionResultSchema,
+  cim10ExtractRequestSchema,
+} from './codage';

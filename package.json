@@ -11,6 +11,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@dataconnect/admin-generated": "link:src/dataconnect-admin-generated",
     "@dataconnect/generated": "link:src/dataconnect-generated",
     "@hookform/resolvers": "^3.9.1",
