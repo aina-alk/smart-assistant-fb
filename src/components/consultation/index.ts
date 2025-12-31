@@ -27,3 +27,8 @@ export { CodagePanel } from './codage-panel';
 export { StepIndicator, StepIndicatorCompact } from './step-indicator';
 export { PatientSelector, PatientBadge } from './patient-selector';
 export { ConsultationWorkflow } from './consultation-workflow';
+
+// Detail View (bloc 4.4)
+export { ConsultationHeader } from './consultation-header';
+export { ConsultationView } from './consultation-view';
+export { ConsultationDocuments } from './consultation-documents';
