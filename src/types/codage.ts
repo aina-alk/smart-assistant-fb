@@ -95,3 +95,132 @@ export const cim10ExtractRequestSchema = z.object({
   diagnostic: z.string().min(3, 'Le diagnostic doit contenir au moins 3 caractères'),
   contexte: z.string().optional(),
 });
+
+// ============================================================================
+// NGAP Types
+// ============================================================================
+
+export type NGAPType = 'consultation' | 'majoration';
+
+export interface NGAPCode {
+  code: string;
+  libelle: string;
+  tarif_base: number;
+  type: NGAPType;
+  coefficient?: number;
+}
+
+// ============================================================================
+// CCAM Types
+// ============================================================================
+
+export type CCAMRegroupement = 'ATM' | 'ENS' | 'VNG' | 'ACT' | 'CHI';
+
+export interface CCAMCode {
+  code: string;
+  libelle: string;
+  tarif_base: number;
+  regroupement: CCAMRegroupement;
+  modificateurs?: string[];
+}
+
+// ============================================================================
+// Codage Consultation Types
+// ============================================================================
+
+export type ActeType = 'NGAP' | 'CCAM';
+
+export interface ActeFacturable {
+  type: ActeType;
+  code: string;
+  libelle: string;
+  tarif_base: number;
+  modificateurs?: string[];
+  coefficient?: number;
+  selected?: boolean;
+}
+
+export interface ActeSuggestion extends ActeFacturable {
+  confiance: number;
+  raison?: string;
+}
+
+export interface CodageConsultation {
+  actes: ActeFacturable[];
+  total_base: number;
+  depassement: number;
+  total_honoraires: number;
+}
+
+export interface CodageSuggestionResult {
+  actes: ActeSuggestion[];
+  confiance: number;
+  notes?: string;
+}
+
+// ============================================================================
+// NGAP/CCAM API Types
+// ============================================================================
+
+export interface NGAPSearchResponse {
+  codes: NGAPCode[];
+  total: number;
+}
+
+export interface CCAMSearchResponse {
+  codes: CCAMCode[];
+  total: number;
+}
+
+export interface CodageSuggestRequest {
+  crc: string;
+  diagnostics?: string[];
+}
+
+export interface CodageSuggestResponse {
+  suggestions: CodageSuggestionResult;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+  };
+}
+
+// ============================================================================
+// NGAP/CCAM Zod Schemas
+// ============================================================================
+
+export const ngapCodeSchema = z.object({
+  code: z.string().min(1),
+  libelle: z.string().min(1),
+  tarif_base: z.number().positive(),
+  type: z.enum(['consultation', 'majoration']),
+  coefficient: z.number().optional(),
+});
+
+export const ccamCodeSchema = z.object({
+  code: z.string().regex(/^[A-Z]{4}\d{3}$/, 'Format de code CCAM invalide'),
+  libelle: z.string().min(1),
+  tarif_base: z.number().positive(),
+  regroupement: z.enum(['ATM', 'ENS', 'VNG', 'ACT', 'CHI']),
+  modificateurs: z.array(z.string()).optional(),
+});
+
+export const acteSuggestionSchema = z.object({
+  type: z.enum(['NGAP', 'CCAM']),
+  code: z.string(),
+  libelle: z.string(),
+  tarif_base: z.number(),
+  confiance: z.number().min(0).max(1),
+  raison: z.string().optional(),
+});
+
+export const codageSuggestionResultSchema = z.object({
+  actes: z.array(acteSuggestionSchema),
+  confiance: z.number().min(0).max(1),
+  notes: z.string().optional(),
+});
+
+export const codageSuggestRequestSchema = z.object({
+  crc: z.string().min(10, 'Le CRC doit contenir au moins 10 caractères'),
+  diagnostics: z.array(z.string()).optional(),
+});
