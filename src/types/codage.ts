@@ -100,7 +100,13 @@ export const cim10ExtractRequestSchema = z.object({
 // NGAP Types
 // ============================================================================
 
-export type NGAPType = 'consultation' | 'majoration';
+export type NGAPType =
+  | 'consultation' // Consultations (C, CS, APC, COE, CSC, AVS)
+  | 'majoration' // Majorations (MPC, MCS, MCG, MN, MM, F, U)
+  | 'acte' // Actes techniques (K codes)
+  | 'bilan' // Bilans (orthophonie, ORL)
+  | 'reeducation' // Rééducation (AMO, AMK)
+  | 'soins'; // Soins (AMI, SFI)
 
 export interface NGAPCode {
   code: string;
@@ -108,6 +114,14 @@ export interface NGAPCode {
   tarif_base: number;
   type: NGAPType;
   coefficient?: number;
+  // Champs RAG pour optimisation IA
+  categorie?: string;
+  content?: string;
+  conditions?: string;
+  reference_ngap?: string;
+  keywords?: string[];
+  profession?: string;
+  cotation?: string;
 }
 
 // ============================================================================
@@ -209,9 +223,17 @@ export interface CodageSuggestResponse {
 export const ngapCodeSchema = z.object({
   code: z.string().min(1),
   libelle: z.string().min(1),
-  tarif_base: z.number().positive(),
-  type: z.enum(['consultation', 'majoration']),
+  tarif_base: z.number().nonnegative(),
+  type: z.enum(['consultation', 'majoration', 'acte', 'bilan', 'reeducation', 'soins']),
   coefficient: z.number().optional(),
+  // Champs RAG optionnels
+  categorie: z.string().optional(),
+  content: z.string().optional(),
+  conditions: z.string().optional(),
+  reference_ngap: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  profession: z.string().optional(),
+  cotation: z.string().optional(),
 });
 
 export const ccamCodeSchema = z.object({
