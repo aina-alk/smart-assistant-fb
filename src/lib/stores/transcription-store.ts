@@ -44,10 +44,14 @@ interface TranscriptionState {
   recordingStatus: RecordingStatus;
   isActive: boolean;
 
+  // Editing
+  isEditing: boolean;
+
   // Metrics
   audioLevel: number;
   duration: number;
   sessionId: string | null;
+  wordCount: number;
 
   // Error
   error: TranscriptionError | null;
@@ -63,6 +67,10 @@ interface TranscriptionActions {
   setConnectionStatus: (status: TranscriptionConnectionStatus) => void;
   setRecordingStatus: (status: RecordingStatus) => void;
   setSessionId: (id: string | null) => void;
+
+  // Editing
+  setEditing: (editing: boolean) => void;
+  updateFullTranscript: (text: string) => void;
 
   // Metrics
   setAudioLevel: (level: number) => void;
@@ -88,11 +96,21 @@ const initialState: TranscriptionState = {
   connectionStatus: 'disconnected',
   recordingStatus: 'idle',
   isActive: false,
+  isEditing: false,
   audioLevel: 0,
   duration: 0,
   sessionId: null,
+  wordCount: 0,
   error: null,
 };
+
+/**
+ * Count words in a string
+ */
+function countWords(text: string): number {
+  if (!text.trim()) return 0;
+  return text.trim().split(/\s+/).length;
+}
 
 // ============================================================================
 // STORE
@@ -109,10 +127,12 @@ export const useTranscriptionStore = create<TranscriptionStore>((set) => ({
   addTurn: (turn) =>
     set((state) => {
       const newTurns = [...state.turns, turn];
+      const newFullTranscript = newTurns.map((t) => t.text).join(' ');
       return {
         turns: newTurns,
-        fullTranscript: newTurns.map((t) => t.text).join(' '),
+        fullTranscript: newFullTranscript,
         partialTranscript: '', // Clear partial when adding final turn
+        wordCount: countWords(newFullTranscript),
       };
     }),
 
@@ -147,6 +167,23 @@ export const useTranscriptionStore = create<TranscriptionStore>((set) => ({
   setSessionId: (id) =>
     set({
       sessionId: id,
+    }),
+
+  // ============================================================================
+  // EDITING
+  // ============================================================================
+
+  setEditing: (editing) =>
+    set({
+      isEditing: editing,
+    }),
+
+  updateFullTranscript: (text) =>
+    set({
+      fullTranscript: text,
+      wordCount: countWords(text),
+      // Clear turns since we're now in manual edit mode
+      turns: [],
     }),
 
   // ============================================================================
