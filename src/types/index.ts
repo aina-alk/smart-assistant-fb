@@ -151,3 +151,23 @@ export {
   codageSuggestionResultSchema,
   codageSuggestRequestSchema,
 } from './codage';
+
+// Export des types Consultation
+export type {
+  ConsultationStatut,
+  Consultation,
+  ConsultationCreate,
+  ConsultationUpdate,
+  ConsultationSearchResult,
+} from './consultation';
+
+export {
+  ENCOUNTER_CLASS_SYSTEM,
+  ENCOUNTER_CLASS_AMB,
+  EXTENSION_BASE_URL,
+  EXTENSION_URLS,
+  consultationToFHIR,
+  fhirToConsultation,
+  getConsultationSummary,
+  isConsultationEditable,
+} from './consultation';
