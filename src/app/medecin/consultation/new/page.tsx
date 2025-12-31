@@ -1,84 +1,53 @@
-/**
- * New Consultation Page - Création d'une nouvelle consultation (placeholder)
- */
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Mic, FileText, Stethoscope } from 'lucide-react';
+import { ConsultationWorkflow } from '@/components/consultation/consultation-workflow';
+import { useConsultationStore } from '@/lib/stores/consultation-store';
 
 export default function NewConsultationPage() {
+  const router = useRouter();
+  const reset = useConsultationStore((s) => s.reset);
+
+  // Reset store on mount for fresh consultation
+  useEffect(() => {
+    reset();
+  }, [reset]);
+
+  const handleComplete = useCallback(
+    (consultationId: string) => {
+      router.push(`/medecin/consultation/${consultationId}`);
+    },
+    [router]
+  );
+
+  const handleCreatePatient = useCallback(() => {
+    // Open patient creation in new tab or modal
+    // For now, redirect to patients page with create param
+    router.push('/medecin/patients?action=create');
+  }, [router]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Nouvelle consultation</h2>
-        <p className="text-muted-foreground">
-          Démarrez une nouvelle consultation avec dictée vocale
-        </p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={handleBack}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Nouvelle consultation</h1>
+          <p className="text-muted-foreground">Suivez les étapes pour compléter la consultation</p>
+        </div>
       </div>
 
-      {/* Workflow steps */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Mic className="h-5 w-5 text-primary" />
-            </div>
-            <CardTitle className="mt-4">1. Dictée vocale</CardTitle>
-            <CardDescription>Dictez vos observations pendant l&apos;examen</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              <Mic className="mr-2 h-4 w-4" />
-              Démarrer la dictée
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <CardTitle className="mt-4">2. Génération CRC</CardTitle>
-            <CardDescription>L&apos;IA génère automatiquement le compte-rendu</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              <FileText className="mr-2 h-4 w-4" />
-              Générer le CRC
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Stethoscope className="h-5 w-5 text-primary" />
-            </div>
-            <CardTitle className="mt-4">3. Codage automatique</CardTitle>
-            <CardDescription>CIM-10, NGAP et CCAM proposés automatiquement</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" disabled>
-              <Stethoscope className="mr-2 h-4 w-4" />
-              Voir le codage
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Info */}
-      <Card className="border-dashed">
-        <CardContent className="pt-6">
-          <p className="text-center text-sm text-muted-foreground">
-            Le workflow de consultation sera disponible après intégration avec AssemblyAI et Claude
-            API.
-            <br />
-            Cette fonctionnalité sera implémentée dans les prochains blocs.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Workflow */}
+      <ConsultationWorkflow onComplete={handleComplete} onCreatePatient={handleCreatePatient} />
     </div>
   );
 }
