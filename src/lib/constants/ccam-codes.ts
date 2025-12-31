@@ -1,4 +1,4 @@
-import type { CCAMCode } from '@/types/codage';
+import type { CCAMCode, CCAMRegroupement } from '@/types/codage';
 
 export const CCAM_CODES: CCAMCode[] = [
   // Audiométrie (ATM)
@@ -181,6 +181,6 @@ export function getCCAMByRegroupement(regroupement: string): CCAMCode[] {
   return CCAM_CODES.filter((c) => c.regroupement === regroupement);
 }
 
-export function getAllRegroupements(): string[] {
+export function getAllRegroupements(): CCAMRegroupement[] {
   return [...new Set(CCAM_CODES.map((c) => c.regroupement))];
 }

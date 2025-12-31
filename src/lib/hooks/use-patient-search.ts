@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
 import type { Patient, PatientSearchResult } from '@/types';
+import { useDebounce } from './use-debounce';
 
 interface UsePatientSearchParams {
   query?: string;
@@ -50,25 +50,6 @@ async function searchPatients(params: UsePatientSearchParams): Promise<PatientSe
     total: data.total,
     nextPageToken: data.nextPageToken,
   };
-}
-
-/**
- * Hook pour utiliser le debounce
- */
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
 }
 
 /**
