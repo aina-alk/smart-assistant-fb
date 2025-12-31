@@ -59,8 +59,10 @@ interface TranscriptionOptions {
   onStart?: () => void;
   /** Called when transcription stops */
   onStop?: () => void;
-  /** Called when a new turn is completed */
+  /** Called when a new turn is completed (final text) */
   onTurnComplete?: (turn: TranscriptionTurn) => void;
+  /** Called when partial transcript updates (text being spoken) */
+  onPartialUpdate?: (text: string) => void;
   /** Called on error */
   onError?: (error: TranscriptionError) => void;
 }
@@ -70,7 +72,7 @@ interface TranscriptionOptions {
 // ============================================================================
 
 export function useTranscription(options: TranscriptionOptions = {}): UseTranscriptionReturn {
-  const { onStart, onStop, onTurnComplete, onError } = options;
+  const { onStart, onStop, onTurnComplete, onPartialUpdate, onError } = options;
 
   // State
   const [turns, setTurns] = useState<TranscriptionTurn[]>([]);
@@ -87,14 +89,16 @@ export function useTranscription(options: TranscriptionOptions = {}): UseTranscr
   const onStartRef = useRef(onStart);
   const onStopRef = useRef(onStop);
   const onTurnCompleteRef = useRef(onTurnComplete);
+  const onPartialUpdateRef = useRef(onPartialUpdate);
   const onErrorRef = useRef(onError);
 
   useEffect(() => {
     onStartRef.current = onStart;
     onStopRef.current = onStop;
     onTurnCompleteRef.current = onTurnComplete;
+    onPartialUpdateRef.current = onPartialUpdate;
     onErrorRef.current = onError;
-  }, [onStart, onStop, onTurnComplete, onError]);
+  }, [onStart, onStop, onTurnComplete, onPartialUpdate, onError]);
 
   // ============================================================================
   // ERROR HELPER
@@ -132,6 +136,7 @@ export function useTranscription(options: TranscriptionOptions = {}): UseTranscr
   const handleTurn = useCallback((turn: TranscriptionTurn, isPartial: boolean) => {
     if (isPartial) {
       setPartialTranscript(turn.text);
+      onPartialUpdateRef.current?.(turn.text);
     } else {
       // Final turn - add to turns and clear partial
       setPartialTranscript('');

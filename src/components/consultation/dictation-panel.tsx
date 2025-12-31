@@ -48,20 +48,15 @@ export function DictationPanel({ onComplete, disabled = false, className }: Dict
     onTurnComplete: (turn) => {
       addTurn(turn);
     },
+    onPartialUpdate: (text) => {
+      setPartialTranscript(text);
+    },
   });
 
   // Sync duration from hook to store
   useEffect(() => {
     setDuration(sessionDuration);
   }, [sessionDuration, setDuration]);
-
-  // Handle transcription updates from the hook
-  const handleTranscriptionUpdate = useCallback(
-    (text: string) => {
-      setPartialTranscript(text);
-    },
-    [setPartialTranscript]
-  );
 
   // Handle edit from display component
   const handleEdit = useCallback(
@@ -92,12 +87,7 @@ export function DictationPanel({ onComplete, disabled = false, className }: Dict
   const isRecording = recordingStatus === 'recording';
   const isPaused = recordingStatus === 'paused';
   const isActive = isRecording || isPaused;
-
-  // Create custom recorder props that use the hook functions
-  const recorderProps = {
-    onTranscriptionUpdate: handleTranscriptionUpdate,
-    disabled: disabled || isEditing,
-  };
+  const isDisabled = disabled || isEditing;
 
   return (
     <div className={cn('flex flex-col gap-4', className)}>
@@ -122,7 +112,7 @@ export function DictationPanel({ onComplete, disabled = false, className }: Dict
         audioLevel={audioLevel}
         duration={sessionDuration}
         error={error}
-        disabled={recorderProps.disabled}
+        disabled={isDisabled}
       />
 
       {/* Action buttons */}
