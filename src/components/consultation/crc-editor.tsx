@@ -1,25 +1,24 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   FileText,
-  Stethoscope,
   ClipboardList,
   Activity,
-  ChevronDown,
-  ChevronUp,
-  Edit2,
-  Check,
-  X,
+  Eye,
+  RefreshCw,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultationStore } from '@/lib/stores/consultation-store';
+import { CRCSection } from './crc-section';
+import { CRCExamenSection } from './crc-examen-section';
+import { CRCPreviewDialog, CRCPreviewCompact } from './crc-preview';
 import type { CRCGenerated, CRCExamen } from '@/types/generation';
 
 // ============================================================================
@@ -30,209 +29,65 @@ interface CRCEditorProps {
   className?: string;
   isGenerating?: boolean;
   onRegenerate?: () => void;
+  readOnly?: boolean;
 }
 
-interface SectionProps {
+interface SectionConfig {
+  field: keyof Omit<CRCGenerated, 'examen'>;
   title: string;
   icon: React.ReactNode;
-  value: string | null;
-  field: keyof CRCGenerated;
-  placeholder?: string;
-}
-
-interface ExamenSectionProps {
-  examen: CRCExamen;
-  onUpdate: (field: keyof CRCExamen, value: string) => void;
+  required: boolean;
+  placeholder: string;
 }
 
 // ============================================================================
-// Section Labels
+// Section Configuration
 // ============================================================================
 
-const EXAMEN_LABELS: Record<keyof CRCExamen, string> = {
-  otoscopie_droite: 'Otoscopie droite',
-  otoscopie_gauche: 'Otoscopie gauche',
-  rhinoscopie: 'Rhinoscopie',
-  oropharynx: 'Oropharynx',
-  palpation_cervicale: 'Palpation cervicale',
-  autres: 'Autres examens',
-};
-
-// ============================================================================
-// Editable Section Component
-// ============================================================================
-
-function EditableSection({ title, icon, value, field, placeholder }: SectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || '');
-  const updateCRCField = useConsultationStore((s) => s.updateCRCField);
-
-  const handleSave = useCallback(() => {
-    updateCRCField(field, editValue);
-    setIsEditing(false);
-  }, [field, editValue, updateCRCField]);
-
-  const handleCancel = useCallback(() => {
-    setEditValue(value || '');
-    setIsEditing(false);
-  }, [value]);
-
-  const handleEdit = useCallback(() => {
-    setEditValue(value || '');
-    setIsEditing(true);
-  }, [value]);
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon}
-          <Label className="font-medium">{title}</Label>
-        </div>
-        {!isEditing ? (
-          <Button variant="ghost" size="sm" onClick={handleEdit}>
-            <Edit2 className="h-3.5 w-3.5" />
-          </Button>
-        ) : (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={handleSave}>
-              <Check className="h-3.5 w-3.5 text-green-600" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleCancel}>
-              <X className="h-3.5 w-3.5 text-destructive" />
-            </Button>
-          </div>
-        )}
-      </div>
-      {isEditing ? (
-        <Textarea
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          placeholder={placeholder}
-          className="min-h-[100px]"
-          autoFocus
-        />
-      ) : (
-        <div
-          className={cn(
-            'rounded-md border bg-muted/30 p-3 text-sm whitespace-pre-wrap',
-            !value && 'text-muted-foreground italic'
-          )}
-        >
-          {value || placeholder || 'Non renseigné'}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// Examen Clinique Section (Collapsible)
-// ============================================================================
-
-function ExamenSection({ examen, onUpdate }: ExamenSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [editingField, setEditingField] = useState<keyof CRCExamen | null>(null);
-  const [editValue, setEditValue] = useState('');
-
-  const handleStartEdit = useCallback(
-    (field: keyof CRCExamen) => {
-      setEditValue(examen[field] || '');
-      setEditingField(field);
-    },
-    [examen]
-  );
-
-  const handleSave = useCallback(() => {
-    if (editingField) {
-      onUpdate(editingField, editValue);
-      setEditingField(null);
-    }
-  }, [editingField, editValue, onUpdate]);
-
-  const handleCancel = useCallback(() => {
-    setEditingField(null);
-    setEditValue('');
-  }, []);
-
-  // Count filled fields
-  const filledCount = Object.values(examen).filter((v) => v && v.trim().length > 0).length;
-
-  return (
-    <div className="space-y-3">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between rounded-md p-2 hover:bg-muted/50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Stethoscope className="h-4 w-4 text-primary" />
-          <span className="font-medium">Examen Clinique ORL</span>
-          <span className="text-xs text-muted-foreground">
-            ({filledCount}/{Object.keys(examen).length} renseignés)
-          </span>
-        </div>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-
-      {isExpanded && (
-        <div className="grid gap-3 pl-6">
-          {(Object.entries(EXAMEN_LABELS) as [keyof CRCExamen, string][]).map(([field, label]) => (
-            <div key={field} className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm text-muted-foreground">{label}</Label>
-                {editingField !== field ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => handleStartEdit(field)}
-                  >
-                    <Edit2 className="h-3 w-3" />
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleSave}>
-                      <Check className="h-3 w-3 text-green-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={handleCancel}
-                    >
-                      <X className="h-3 w-3 text-destructive" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-              {editingField === field ? (
-                <Textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="min-h-[60px] text-sm"
-                  autoFocus
-                />
-              ) : (
-                <div
-                  className={cn(
-                    'rounded border bg-muted/20 p-2 text-sm',
-                    !examen[field] && 'text-muted-foreground italic'
-                  )}
-                >
-                  {examen[field] || 'Non examiné'}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const SECTIONS: SectionConfig[] = [
+  {
+    field: 'motif',
+    title: 'Motif de consultation',
+    icon: <ClipboardList className="h-4 w-4" />,
+    required: true,
+    placeholder: 'Motif de la consultation...',
+  },
+  {
+    field: 'histoire',
+    title: 'Histoire de la maladie',
+    icon: <FileText className="h-4 w-4" />,
+    required: true,
+    placeholder: 'Histoire de la maladie actuelle...',
+  },
+  {
+    field: 'examens_complementaires',
+    title: 'Examens complémentaires',
+    icon: <Activity className="h-4 w-4" />,
+    required: false,
+    placeholder: "Résultats d'examens complémentaires...",
+  },
+  {
+    field: 'diagnostic',
+    title: 'Diagnostic',
+    icon: <FileText className="h-4 w-4" />,
+    required: true,
+    placeholder: 'Diagnostic principal et secondaires...',
+  },
+  {
+    field: 'conduite',
+    title: 'Conduite à tenir',
+    icon: <ClipboardList className="h-4 w-4" />,
+    required: true,
+    placeholder: 'Plan de traitement et suivi...',
+  },
+  {
+    field: 'conclusion',
+    title: 'Conclusion',
+    icon: <FileText className="h-4 w-4" />,
+    required: true,
+    placeholder: 'Synthèse et conclusion...',
+  },
+];
 
 // ============================================================================
 // Loading Skeleton
@@ -263,20 +118,94 @@ function CRCEditorSkeleton() {
 // Main CRC Editor Component
 // ============================================================================
 
-export function CRCEditor({ className, isGenerating, onRegenerate }: CRCEditorProps) {
+export function CRCEditor({
+  className,
+  isGenerating,
+  onRegenerate,
+  readOnly = false,
+}: CRCEditorProps) {
   const crc = useConsultationStore((s) => s.crc);
+  const patient = useConsultationStore((s) => s.patient);
   const updateCRCField = useConsultationStore((s) => s.updateCRCField);
 
-  const handleExamenUpdate = useCallback(
-    (field: keyof CRCExamen, value: string) => {
-      if (!crc) return;
-      updateCRCField('examen', {
-        ...crc.examen,
-        [field]: value,
-      } as unknown as string);
+  // Track original CRC for modification detection
+  const originalCRCRef = useRef<CRCGenerated | null>(null);
+  const [lastModified, setLastModified] = useState<Date | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Expanded state for sections
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    motif: true,
+    histoire: true,
+    examen: true,
+    examens_complementaires: false,
+    diagnostic: true,
+    conduite: true,
+    conclusion: true,
+  });
+
+  // Store original CRC on first load
+  useEffect(() => {
+    if (crc && !originalCRCRef.current) {
+      originalCRCRef.current = JSON.parse(JSON.stringify(crc));
+    }
+  }, [crc]);
+
+  // Reset original when regenerating
+  useEffect(() => {
+    if (isGenerating) {
+      originalCRCRef.current = null;
+    }
+  }, [isGenerating]);
+
+  // Check if any section is modified
+  const isModified = useCallback(() => {
+    if (!crc || !originalCRCRef.current) return false;
+    return JSON.stringify(crc) !== JSON.stringify(originalCRCRef.current);
+  }, [crc]);
+
+  // Check validation errors
+  const getValidationErrors = useCallback(() => {
+    if (!crc) return [];
+    const errors: string[] = [];
+    SECTIONS.forEach((section) => {
+      if (section.required) {
+        const value = crc[section.field];
+        if (!value || (typeof value === 'string' && value.trim().length === 0)) {
+          errors.push(section.title);
+        }
+      }
+    });
+    // Check examen (at least one field required)
+    const examenFilled = Object.values(crc.examen).some((v) => v && v.trim().length > 0);
+    if (!examenFilled) {
+      errors.push('Examen clinique');
+    }
+    return errors;
+  }, [crc]);
+
+  const handleFieldChange = useCallback(
+    (field: keyof CRCGenerated, value: string) => {
+      updateCRCField(field, value);
+      setLastModified(new Date());
     },
-    [crc, updateCRCField]
+    [updateCRCField]
   );
+
+  const handleExamenChange = useCallback(
+    (examen: CRCExamen) => {
+      updateCRCField('examen', examen as unknown as string);
+      setLastModified(new Date());
+    },
+    [updateCRCField]
+  );
+
+  const toggleSection = useCallback((field: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  }, []);
 
   if (isGenerating) {
     return <CRCEditorSkeleton />;
@@ -296,81 +225,112 @@ export function CRCEditor({ className, isGenerating, onRegenerate }: CRCEditorPr
     );
   }
 
+  const validationErrors = getValidationErrors();
+  const hasErrors = validationErrors.length > 0;
+
   return (
-    <Card className={className}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-5 w-5 text-primary" />
-            Compte-Rendu de Consultation
-          </CardTitle>
-          {onRegenerate && (
-            <Button variant="outline" size="sm" onClick={onRegenerate}>
-              Régénérer
-            </Button>
-          )}
-        </div>
-      </CardHeader>
+    <>
+      <Card className={className}>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-primary" />
+                Compte-Rendu de Consultation
+              </CardTitle>
+              {isModified() && (
+                <Badge variant="outline" className="text-amber-600 border-amber-400">
+                  modifié
+                </Badge>
+              )}
+              {hasErrors && (
+                <Badge variant="destructive" className="flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {validationErrors.length} section(s) requise(s)
+                </Badge>
+              )}
+            </div>
 
-      <CardContent className="space-y-6">
-        {/* Motif */}
-        <EditableSection
-          title="Motif de consultation"
-          icon={<ClipboardList className="h-4 w-4 text-primary" />}
-          value={crc.motif}
-          field="motif"
-          placeholder="Motif de la consultation..."
-        />
+            <div className="flex items-center gap-2">
+              {lastModified && (
+                <span className="text-xs text-muted-foreground">
+                  Dernière modification:{' '}
+                  {lastModified.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              )}
+              <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Aperçu
+              </Button>
+              {onRegenerate && !readOnly && (
+                <Button variant="outline" size="sm" onClick={onRegenerate}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Régénérer
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
 
-        {/* Histoire de la maladie */}
-        <EditableSection
-          title="Histoire de la maladie"
-          icon={<FileText className="h-4 w-4 text-primary" />}
-          value={crc.histoire}
-          field="histoire"
-          placeholder="Histoire de la maladie actuelle..."
-        />
+        <CardContent className="space-y-4">
+          {/* Motif & Histoire */}
+          {SECTIONS.slice(0, 2).map((section) => (
+            <CRCSection
+              key={section.field}
+              title={section.title}
+              icon={section.icon}
+              content={crc[section.field]}
+              onChange={(value) => handleFieldChange(section.field, value)}
+              expanded={expandedSections[section.field]}
+              onToggle={() => toggleSection(section.field)}
+              readOnly={readOnly}
+              required={section.required}
+              placeholder={section.placeholder}
+              originalContent={originalCRCRef.current?.[section.field]}
+            />
+          ))}
 
-        {/* Examen clinique (collapsible) */}
-        <ExamenSection examen={crc.examen} onUpdate={handleExamenUpdate} />
+          {/* Examen Clinique (special section) */}
+          <CRCExamenSection
+            examen={crc.examen}
+            onChange={handleExamenChange}
+            readOnly={readOnly}
+            expanded={expandedSections.examen}
+            onToggle={() => toggleSection('examen')}
+            originalExamen={originalCRCRef.current?.examen}
+          />
 
-        {/* Examens complémentaires */}
-        <EditableSection
-          title="Examens complémentaires"
-          icon={<Activity className="h-4 w-4 text-primary" />}
-          value={crc.examens_complementaires}
-          field="examens_complementaires"
-          placeholder="Résultats d'examens complémentaires..."
-        />
+          {/* Remaining sections */}
+          {SECTIONS.slice(2).map((section) => (
+            <CRCSection
+              key={section.field}
+              title={section.title}
+              icon={section.icon}
+              content={crc[section.field]}
+              onChange={(value) => handleFieldChange(section.field, value)}
+              expanded={expandedSections[section.field]}
+              onToggle={() => toggleSection(section.field)}
+              readOnly={readOnly}
+              required={section.required}
+              placeholder={section.placeholder}
+              originalContent={originalCRCRef.current?.[section.field]}
+            />
+          ))}
+        </CardContent>
+      </Card>
 
-        {/* Diagnostic */}
-        <EditableSection
-          title="Diagnostic"
-          icon={<Stethoscope className="h-4 w-4 text-primary" />}
-          value={crc.diagnostic}
-          field="diagnostic"
-          placeholder="Diagnostic principal et secondaires..."
-        />
-
-        {/* Conduite à tenir */}
-        <EditableSection
-          title="Conduite à tenir"
-          icon={<ClipboardList className="h-4 w-4 text-primary" />}
-          value={crc.conduite}
-          field="conduite"
-          placeholder="Plan de traitement et suivi..."
-        />
-
-        {/* Conclusion */}
-        <EditableSection
-          title="Conclusion"
-          icon={<FileText className="h-4 w-4 text-primary" />}
-          value={crc.conclusion}
-          field="conclusion"
-          placeholder="Synthèse et conclusion..."
-        />
-      </CardContent>
-    </Card>
+      {/* Preview Dialog */}
+      <CRCPreviewDialog
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        crc={crc}
+        patient={patient}
+        dateConsultation={new Date()}
+      />
+    </>
   );
 }
 
@@ -385,27 +345,5 @@ export function CRCPreview({ className }: { className?: string }) {
     return null;
   }
 
-  return (
-    <div className={cn('space-y-4 text-sm', className)}>
-      <div>
-        <h4 className="font-medium text-muted-foreground mb-1">Motif</h4>
-        <p>{crc.motif}</p>
-      </div>
-
-      <div>
-        <h4 className="font-medium text-muted-foreground mb-1">Diagnostic</h4>
-        <p>{crc.diagnostic}</p>
-      </div>
-
-      <div>
-        <h4 className="font-medium text-muted-foreground mb-1">Conduite à tenir</h4>
-        <p>{crc.conduite}</p>
-      </div>
-
-      <div>
-        <h4 className="font-medium text-muted-foreground mb-1">Conclusion</h4>
-        <p>{crc.conclusion}</p>
-      </div>
-    </div>
-  );
+  return <CRCPreviewCompact crc={crc} className={className} />;
 }
