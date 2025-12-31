@@ -171,3 +171,28 @@ export {
   getConsultationSummary,
   isConsultationEditable,
 } from './consultation';
+
+// Export des types Ordonnance
+export type {
+  Medicament,
+  MedicamentCreate,
+  Ordonnance,
+  OrdonnanceCreate,
+  OrdonnanceUpdate,
+  MedicamentExtrait,
+  ExtractionOrdonnanceResult,
+  ExtractOrdonnanceRequest,
+  ExtractOrdonnanceResponse,
+  CreateOrdonnanceRequest,
+  OrdonnanceResponse,
+} from './ordonnance';
+
+export {
+  medicamentSchema,
+  medicamentCreateSchema,
+  ordonnanceSchema,
+  medicamentExtraitSchema,
+  extractionOrdonnanceResultSchema,
+  extractOrdonnanceRequestSchema,
+  createOrdonnanceRequestSchema,
+} from './ordonnance';

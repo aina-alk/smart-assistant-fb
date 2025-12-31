@@ -5,6 +5,7 @@
 import type { Encounter, Reference, Coding } from './fhir';
 import type { CRCGenerated } from './generation';
 import type { DiagnosticSelection, CodageConsultation } from './codage';
+import type { Ordonnance } from './ordonnance';
 
 // ============================================================================
 // Types Application
@@ -30,6 +31,7 @@ export interface Consultation {
   crc?: CRCGenerated;
   diagnostics?: DiagnosticSelection;
   codage?: CodageConsultation;
+  ordonnances?: Ordonnance[];
 
   // Statut
   statut: ConsultationStatut;
@@ -84,6 +86,7 @@ export const EXTENSION_URLS = {
   crc: `${EXTENSION_BASE_URL}/consultation-crc`,
   diagnostics: `${EXTENSION_BASE_URL}/consultation-diagnostics`,
   codage: `${EXTENSION_BASE_URL}/consultation-codage`,
+  ordonnances: `${EXTENSION_BASE_URL}/consultation-ordonnances`,
   documents: `${EXTENSION_BASE_URL}/consultation-documents`,
 } as const;
 
@@ -211,6 +214,13 @@ export function consultationToFHIR(
     });
   }
 
+  if (consultation.ordonnances && consultation.ordonnances.length > 0) {
+    extensions.push({
+      url: EXTENSION_URLS.ordonnances,
+      valueString: JSON.stringify(consultation.ordonnances),
+    });
+  }
+
   if (consultation.documents && consultation.documents.length > 0) {
     extensions.push({
       url: EXTENSION_URLS.documents,
@@ -284,6 +294,16 @@ export function fhirToConsultation(encounter: EncounterWithExtensions): Consulta
     }
   }
 
+  let ordonnances: Ordonnance[] | undefined;
+  const ordonnancesJson = extensionMap.get(EXTENSION_URLS.ordonnances);
+  if (ordonnancesJson) {
+    try {
+      ordonnances = JSON.parse(ordonnancesJson) as Ordonnance[];
+    } catch {
+      console.warn('Erreur parsing ordonnances JSON:', ordonnancesJson);
+    }
+  }
+
   let documents: string[] | undefined;
   const documentsJson = extensionMap.get(EXTENSION_URLS.documents);
   if (documentsJson) {
@@ -309,6 +329,7 @@ export function fhirToConsultation(encounter: EncounterWithExtensions): Consulta
     crc,
     diagnostics,
     codage,
+    ordonnances,
     statut,
     documents,
     createdAt,
