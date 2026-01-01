@@ -31,7 +31,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useConsultations } from '@/lib/hooks/use-consultations';
-import type { Patient, Consultation, ConsultationStatut } from '@/types';
+import {
+  type Patient,
+  type Consultation,
+  type ConsultationStatut,
+  isConsultationEditable,
+} from '@/types';
 import type { Ordonnance } from '@/types/ordonnance';
 import type { BilanPrescription } from '@/types/bilan';
 
@@ -347,7 +352,17 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
     router.push(`/medecin/consultation/new?patientId=${patient.id}`);
   };
 
-  const handleViewConsultation = (consultationId: string) => {
+  const handleViewConsultation = (consultation: Consultation) => {
+    if (isConsultationEditable(consultation)) {
+      router.push(
+        `/medecin/consultation/new?consultationId=${consultation.id}&patientId=${patient.id}`
+      );
+    } else {
+      router.push(`/medecin/consultation/${consultation.id}`);
+    }
+  };
+
+  const handleViewConsultationSummary = (consultationId: string) => {
     router.push(`/medecin/consultation/${consultationId}`);
   };
 
@@ -369,7 +384,7 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
           <ConsultationCard
             key={item.id}
             consultation={item.data as Consultation}
-            onClick={() => handleViewConsultation(item.consultationId)}
+            onClick={() => handleViewConsultation(item.data as Consultation)}
             onDelete={handleDeleteConsultation}
           />
         );
@@ -378,7 +393,7 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
           <OrdonnanceCard
             key={item.id}
             ordonnance={item.data as Ordonnance}
-            onClick={() => handleViewConsultation(item.consultationId)}
+            onClick={() => handleViewConsultationSummary(item.consultationId)}
           />
         );
       case 'bilan':
@@ -386,7 +401,7 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
           <BilanCard
             key={item.id}
             bilan={item.data as BilanPrescription}
-            onClick={() => handleViewConsultation(item.consultationId)}
+            onClick={() => handleViewConsultationSummary(item.consultationId)}
           />
         );
       default:
