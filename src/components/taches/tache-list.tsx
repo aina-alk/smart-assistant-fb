@@ -1,6 +1,8 @@
 'use client';
 
+import { CheckSquare } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/shared/empty-state';
 import { TacheCard } from './tache-card';
 import type { Tache, TachePriorite } from '@/types/tache';
 
@@ -50,12 +52,11 @@ export function TacheList({
 
   if (taches.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-lg font-medium text-muted-foreground">Aucune tâche</p>
-        <p className="text-sm text-muted-foreground">
-          Créez votre première tâche avec le bouton ci-dessus
-        </p>
-      </div>
+      <EmptyState
+        icon={CheckSquare}
+        title="Aucune tâche"
+        description="Créez votre première tâche avec le bouton ci-dessus"
+      />
     );
   }
 

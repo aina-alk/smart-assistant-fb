@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreVertical, Eye, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/shared/empty-state';
 import { PatientCard } from './patient-card';
 import type { Patient } from '@/types';
 import { getPatientFullName, getPatientAge } from '@/types';
@@ -61,12 +62,11 @@ export function PatientList({
 
   if (patients.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-lg font-medium text-muted-foreground">Aucun patient trouvé</p>
-        <p className="text-sm text-muted-foreground">
-          Essayez de modifier vos critères de recherche
-        </p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Aucun patient trouvé"
+        description="Essayez de modifier vos critères de recherche"
+      />
     );
   }
 
