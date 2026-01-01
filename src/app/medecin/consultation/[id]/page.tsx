@@ -155,8 +155,9 @@ export default function ConsultationDetailPage({ params }: ConsultationDetailPag
       {/* Header */}
       <ConsultationHeader
         consultation={consultation}
+        patient={patient}
         onEdit={handleEdit}
-        backHref="/medecin/consultations"
+        backHref="/medecin/consultation/new"
       />
 
       {/* Patient loading indicator */}
