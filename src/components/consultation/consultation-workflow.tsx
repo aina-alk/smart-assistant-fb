@@ -51,7 +51,7 @@ interface ConsultationWorkflowProps {
 // Auto-save Hook
 // ============================================================================
 
-function useAutoSave(interval: number = 30000) {
+function useAutoSave(interval: number = 900000) {
   const { user } = useAuth();
   const consultationId = useConsultationStore((s) => s.consultationId);
   const hasUnsavedChanges = useConsultationStore((s) => s.hasUnsavedChanges);
