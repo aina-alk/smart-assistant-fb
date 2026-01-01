@@ -183,11 +183,15 @@ export function BilanEditor({
     }
   }, [crcText, diagnostic, examens, onExamensChange]);
 
-  // Handler pour ajouter un examen depuis le sélecteur
+  // Handler pour ajouter ou mettre à jour un examen depuis le sélecteur
   const handleSelectExamen = useCallback(
     (examen: ExamenExtrait) => {
-      // Éviter les doublons
-      if (!examens.some((e) => e.code === examen.code)) {
+      const existingIndex = examens.findIndex((e) => e.code === examen.code);
+      if (existingIndex >= 0) {
+        const updated = [...examens];
+        updated[existingIndex] = examen;
+        onExamensChange(updated);
+      } else {
         onExamensChange([...examens, examen]);
       }
     },

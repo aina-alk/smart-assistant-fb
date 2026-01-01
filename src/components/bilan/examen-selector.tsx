@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, X, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, X, AlertTriangle, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +50,26 @@ function ExamenCard({
   urgent: boolean;
   onUrgentChange: (value: boolean) => void;
 }) {
+  const [localIndication, setLocalIndication] = useState(indication);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    setLocalIndication(indication);
+    setHasChanges(false);
+  }, [indication]);
+
+  const handleLocalChange = (value: string) => {
+    setLocalIndication(value);
+    setHasChanges(value !== indication);
+  };
+
+  const handleConfirm = () => {
+    if (hasChanges) {
+      onIndicationChange(localIndication);
+      setHasChanges(false);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -91,12 +111,26 @@ function ExamenCard({
 
       {isSelected && (
         <div className="mt-3 pl-7 space-y-2">
-          <Input
-            placeholder="Indication clinique..."
-            value={indication}
-            onChange={(e) => onIndicationChange(e.target.value)}
-            className="h-8 text-sm"
-          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="Indication clinique..."
+              value={localIndication}
+              onChange={(e) => handleLocalChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
+              className="h-8 text-sm flex-1"
+            />
+            {hasChanges && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="h-8 px-2"
+                onClick={handleConfirm}
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <Checkbox checked={urgent} onCheckedChange={(v) => onUrgentChange(!!v)} />
             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
@@ -193,20 +227,16 @@ export function ExamenSelector({
 
   const handleIndicationChange = (code: string, indication: string) => {
     setIndications((prev) => ({ ...prev, [code]: indication }));
-    // Update the selected examen
     const examen = selectedExamens.find((e) => e.code === code);
     if (examen) {
-      onRemove(code);
       onSelect({ ...examen, indication });
     }
   };
 
   const handleUrgentChange = (code: string, urgent: boolean) => {
     setUrgentFlags((prev) => ({ ...prev, [code]: urgent }));
-    // Update the selected examen
     const examen = selectedExamens.find((e) => e.code === code);
     if (examen) {
-      onRemove(code);
       onSelect({ ...examen, urgent });
     }
   };

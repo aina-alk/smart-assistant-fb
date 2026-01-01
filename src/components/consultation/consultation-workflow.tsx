@@ -54,6 +54,7 @@ import { useCreateConsultation } from '@/lib/hooks/use-create-consultation';
 import { useUpdateConsultation } from '@/lib/hooks/use-update-consultation';
 import { useDeleteConsultation } from '@/lib/hooks/use-delete-consultation';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useAuthorization } from '@/hooks/useAuthorization';
 import type { CRCGenerated } from '@/types/generation';
 import type { DiagnosticSelection, CodageConsultation } from '@/types/codage';
 
@@ -619,10 +620,14 @@ export function ConsultationWorkflow({
 
   const { save } = useAutoSave();
 
-  // Praticien info (simplified for now)
+  // Get logged-in practitioner info
+  const { user } = useAuth();
+  const { userData } = useAuthorization();
+  const displayName = userData?.displayName || user?.displayName || 'Médecin';
+  const title = userData?.role === 'medecin' ? 'Dr.' : '';
   const praticien = {
-    nom: 'Dr. Praticien',
-    specialite: 'ORL',
+    nom: title ? `${title} ${displayName}` : displayName,
+    specialite: userData?.medecinData?.specialty || 'ORL',
   };
 
   // Handle ordonnance save
@@ -731,7 +736,10 @@ export function ConsultationWorkflow({
           {patient && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                >
                   <FileText className="h-4 w-4" />
                   Prescriptions
                   <ChevronDown className="h-4 w-4" />
