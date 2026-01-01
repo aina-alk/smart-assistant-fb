@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, forwardRef } from 'react';
-import { FileText, Printer, X, Save, Loader2, Pill, CheckCircle2 } from 'lucide-react';
+import { FileText, Printer, Save, Loader2, Pill, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -231,15 +231,10 @@ export function OrdonnanceDialog({
                 <FileText className="h-5 w-5" />
                 Aperçu de l&apos;ordonnance
               </DialogTitle>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handlePrint}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Imprimer
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="mr-8">
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer
+              </Button>
             </div>
           </DialogHeader>
 
@@ -395,15 +390,10 @@ export function OrdonnanceViewDialog({
                 year: 'numeric',
               }).format(new Date(ordonnance.date))}
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={handlePrint} className="mr-8">
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimer
+            </Button>
           </div>
         </DialogHeader>
 

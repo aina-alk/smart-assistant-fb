@@ -4,7 +4,6 @@ import { useState, useCallback, forwardRef } from 'react';
 import {
   FileSearch,
   Printer,
-  X,
   Save,
   Loader2,
   AlertTriangle,
@@ -293,15 +292,10 @@ export function BilanDialog({
                 <FileSearch className="h-5 w-5" />
                 Aperçu du bilan
               </DialogTitle>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handlePrint}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Imprimer
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="mr-8">
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimer
+              </Button>
             </div>
           </DialogHeader>
 
@@ -445,15 +439,10 @@ export function BilanViewDialog({
                 year: 'numeric',
               }).format(new Date(bilan.date))}
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={handlePrint} className="mr-8">
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimer
+            </Button>
           </div>
         </DialogHeader>
 
