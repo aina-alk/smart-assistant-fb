@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateCRCPDF, generateOrdonnancePDF, generateBilanPDF } from '@/lib/pdf';
+import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
 import type { CRCGenerated } from '@/types/generation';
 import type { DiagnosticSelection, CodageConsultation } from '@/types/codage';
 import type { Medicament } from '@/types/ordonnance';
@@ -167,6 +168,12 @@ const bilanDataSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'authentification
+    const authResult = await verifyMedecinAccess();
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     // Parse query params
     const { searchParams } = new URL(request.url);
     const typeParam = searchParams.get('type');
@@ -274,6 +281,12 @@ export async function POST(request: NextRequest) {
  * Récupère un PDF déjà généré (future implémentation avec stockage)
  */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Vérifier l'authentification
+  const authResult = await verifyMedecinAccess();
+  if (!authResult.success) {
+    return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+  }
+
   const { id } = await params;
 
   // Pour l'instant, retourner une erreur car nous n'avons pas encore de stockage
