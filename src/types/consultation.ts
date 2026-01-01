@@ -6,6 +6,7 @@ import type { Encounter, Reference, Coding } from './fhir';
 import type { CRCGenerated } from './generation';
 import type { DiagnosticSelection, CodageConsultation } from './codage';
 import type { Ordonnance } from './ordonnance';
+import type { BilanPrescription } from './bilan';
 
 // ============================================================================
 // Types Application
@@ -32,6 +33,7 @@ export interface Consultation {
   diagnostics?: DiagnosticSelection;
   codage?: CodageConsultation;
   ordonnances?: Ordonnance[];
+  bilans?: BilanPrescription[];
 
   // Statut
   statut: ConsultationStatut;
@@ -87,6 +89,7 @@ export const EXTENSION_URLS = {
   diagnostics: `${EXTENSION_BASE_URL}/consultation-diagnostics`,
   codage: `${EXTENSION_BASE_URL}/consultation-codage`,
   ordonnances: `${EXTENSION_BASE_URL}/consultation-ordonnances`,
+  bilans: `${EXTENSION_BASE_URL}/consultation-bilans`,
   documents: `${EXTENSION_BASE_URL}/consultation-documents`,
 } as const;
 
@@ -221,6 +224,13 @@ export function consultationToFHIR(
     });
   }
 
+  if (consultation.bilans && consultation.bilans.length > 0) {
+    extensions.push({
+      url: EXTENSION_URLS.bilans,
+      valueString: JSON.stringify(consultation.bilans),
+    });
+  }
+
   if (consultation.documents && consultation.documents.length > 0) {
     extensions.push({
       url: EXTENSION_URLS.documents,
@@ -304,6 +314,16 @@ export function fhirToConsultation(encounter: EncounterWithExtensions): Consulta
     }
   }
 
+  let bilans: BilanPrescription[] | undefined;
+  const bilansJson = extensionMap.get(EXTENSION_URLS.bilans);
+  if (bilansJson) {
+    try {
+      bilans = JSON.parse(bilansJson) as BilanPrescription[];
+    } catch {
+      console.warn('Erreur parsing bilans JSON:', bilansJson);
+    }
+  }
+
   let documents: string[] | undefined;
   const documentsJson = extensionMap.get(EXTENSION_URLS.documents);
   if (documentsJson) {
@@ -330,6 +350,7 @@ export function fhirToConsultation(encounter: EncounterWithExtensions): Consulta
     diagnostics,
     codage,
     ordonnances,
+    bilans,
     statut,
     documents,
     createdAt,

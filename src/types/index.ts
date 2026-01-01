@@ -196,3 +196,30 @@ export {
   extractOrdonnanceRequestSchema,
   createOrdonnanceRequestSchema,
 } from './ordonnance';
+
+// Export des types Bilan (Prescriptions d'examens)
+export type {
+  CategorieExamen,
+  ExamenPrescrit,
+  ExamenPrescritCreate,
+  BilanPrescription,
+  BilanPrescriptionCreate,
+  BilanPrescriptionUpdate,
+  ExamenExtrait,
+  ExtractionBilanResult,
+  ExtractBilanRequest,
+  ExtractBilanResponse,
+  CreateBilanRequest,
+  BilanResponse,
+} from './bilan';
+
+export {
+  CATEGORIES_EXAMEN,
+  examenPrescritSchema,
+  examenPrescritCreateSchema,
+  bilanPrescriptionSchema,
+  examenExtraitSchema,
+  extractionBilanResultSchema,
+  extractBilanRequestSchema,
+  createBilanRequestSchema,
+} from './bilan';
