@@ -103,6 +103,7 @@ export interface CustomClaims {
 
 export type AuditAction =
   | 'user_created'
+  | 'user_created_retry'
   | 'user_approved'
   | 'user_rejected'
   | 'status_changed'

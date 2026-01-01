@@ -163,10 +163,10 @@ export default function EnAttentePage() {
         <CardContent className="pt-6 text-center">
           <p className="text-sm text-muted-foreground">Une question ? Contactez-nous :</p>
           <a
-            href="mailto:support@superassistant.fr"
+            href="mailto:support@selav.fr"
             className="text-primary hover:underline text-sm font-medium"
           >
-            support@superassistant.fr
+            support@selav.fr
           </a>
         </CardContent>
       </Card>

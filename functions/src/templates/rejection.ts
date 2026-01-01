@@ -40,7 +40,7 @@ export function getRejectionEmailTemplate(user: UserData) {
         <p style="color: #4b5563; line-height: 1.6;">
           Si vous pensez qu'il s'agit d'une erreur ou si votre situation évolue,
           n'hésitez pas à nous recontacter à l'adresse suivante :
-          <a href="mailto:support@superassistant.fr" style="color: #2563eb;">support@superassistant.fr</a>
+          <a href="mailto:support@selav.fr" style="color: #2563eb;">support@selav.fr</a>
         </p>
 
         <p style="color: #4b5563; line-height: 1.6;">

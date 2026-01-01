@@ -100,11 +100,11 @@ export default function DemandeRefuseePage() {
             n&apos;hésitez pas à nous contacter :
           </p>
           <a
-            href="mailto:support@superassistant.fr"
+            href="mailto:support@selav.fr"
             className="flex items-center gap-2 mt-3 text-primary hover:underline"
           >
             <Mail className="h-4 w-4" />
-            support@superassistant.fr
+            support@selav.fr
           </a>
         </CardContent>
       </Card>

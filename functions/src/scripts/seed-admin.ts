@@ -11,7 +11,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Configuration de l'admin à créer
 const ADMIN_CONFIG = {
-  email: 'admin@superassistant.fr',
+  email: 'admin@selav.fr',
   displayName: 'Administrateur Principal',
   phone: '+33600000000',
 };

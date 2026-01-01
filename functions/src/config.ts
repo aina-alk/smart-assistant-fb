@@ -10,14 +10,12 @@ export const getResendApiKey = (): string | null => {
 // Configuration de l'application
 export const config = {
   resend: {
-    fromEmail: 'Super Assistant Médical <contact@superassistant.fr>',
+    fromEmail: 'Super Assistant Médical <noreply@selav.fr>',
     adminEmail: process.env.ADMIN_EMAIL || 'support@selav.fr',
   },
   app: {
     name: 'Super Assistant Médical',
-    url: process.env.APP_URL || 'https://app.superassistant.fr',
-    adminUrl: process.env.APP_URL
-      ? `${process.env.APP_URL}/admin`
-      : 'https://app.superassistant.fr/admin',
+    url: process.env.APP_URL || 'https://app.selav.fr',
+    adminUrl: process.env.APP_URL ? `${process.env.APP_URL}/admin` : 'https://app.selav.fr/admin',
   },
 };

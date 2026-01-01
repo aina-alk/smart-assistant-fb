@@ -51,7 +51,7 @@ export function getWelcomeEmailTemplate(user: UserData) {
           <h3 style="margin-top: 0; color: #374151;">Besoin d'aide ?</h3>
           <p style="color: #4b5563; margin-bottom: 10px;">Notre équipe est disponible pour vous accompagner :</p>
           <p style="color: #4b5563; margin: 0;">
-            <strong>Email :</strong> support@superassistant.fr
+            <strong>Email :</strong> support@selav.fr
           </p>
         </div>
 

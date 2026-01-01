@@ -17,3 +17,4 @@ export { approveUser } from './callables/approveUser';
 export { rejectUser } from './callables/rejectUser';
 export { updateUserStatus } from './callables/updateUserStatus';
 export { getAdminStats } from './callables/getAdminStats';
+export { retryUserCreated } from './callables/retryUserCreated';
