@@ -64,12 +64,12 @@ export async function POST(
 
     // 2. Envoyer l'email de confirmation au candidat
     await resend.emails.send({
-      from: 'Super Assistant Médical <noreply@selav.fr>',
+      from: 'Selav <noreply@selav.fr>',
       to: userData.email,
       subject: "Votre demande d'inscription a bien été reçue",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #2563eb;">Super Assistant Médical</h1>
+          <h1 style="color: #2563eb;">Selav</h1>
           <h2>Bonjour ${userData.displayName},</h2>
           <p>Nous avons bien reçu votre demande d'inscription en tant que <strong>${getRoleLabel(userData.role)}</strong>.</p>
           <p>Notre équipe va examiner votre demande et vous contacter prochainement pour un court entretien.</p>
@@ -86,12 +86,12 @@ export async function POST(
     // 3. Notifier l'admin
     const adminEmail = process.env.ADMIN_EMAIL || 'support@selav.fr';
     await resend.emails.send({
-      from: 'Super Assistant Médical <noreply@selav.fr>',
+      from: 'Selav <noreply@selav.fr>',
       to: adminEmail,
       subject: `[Nouvelle inscription] ${userData.displayName} - ${getRoleLabel(userData.role)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #2563eb;">Super Assistant Médical</h1>
+          <h1 style="color: #2563eb;">Selav</h1>
           <h2>Nouvelle demande d'inscription</h2>
           <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Nom :</strong> ${userData.displayName}</p>

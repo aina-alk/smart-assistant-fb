@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Super Assistant Médical',
-  description: 'Application web pour chirurgiens ORL - génération de CRC via dictée vocale et IA',
+  title: 'Selav',
+  description: 'Assistant IA pour la documentation médicale ORL',
 };
 
 export default function RootLayout({

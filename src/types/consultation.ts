@@ -80,7 +80,7 @@ export const ENCOUNTER_CLASS_AMB: Coding = {
 };
 
 /** Système pour les extensions custom */
-export const EXTENSION_BASE_URL = 'https://super-assistant-medical.fr/fhir/StructureDefinition';
+export const EXTENSION_BASE_URL = 'https://selav.fr/fhir/StructureDefinition';
 
 /** URLs des extensions */
 export const EXTENSION_URLS = {

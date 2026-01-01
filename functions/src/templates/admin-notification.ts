@@ -30,7 +30,7 @@ export function getAdminNotificationTemplate(user: UserData, userId: string) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #2563eb; margin: 0;">Super Assistant Médical</h1>
+          <h1 style="color: #2563eb; margin: 0;">Selav</h1>
           <p style="color: #6b7280; margin-top: 5px;">Administration</p>
         </div>
 

@@ -113,7 +113,7 @@ export default function EmailLinkCallbackPage() {
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center pb-4">
           <CardTitle className="text-xl font-bold text-foreground">Connexion par email</CardTitle>
-          <CardDescription>Super Assistant Médical</CardDescription>
+          <CardDescription>Selav</CardDescription>
         </CardHeader>
         <CardContent>
           {state === 'loading' && (

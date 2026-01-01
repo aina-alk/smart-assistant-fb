@@ -78,8 +78,8 @@ export default function DemandeRefuseePage() {
       <Card>
         <CardContent className="pt-6">
           <p className="text-muted-foreground">
-            Nous avons examiné votre demande d&apos;accès à Super Assistant Médical et ne sommes
-            malheureusement pas en mesure d&apos;y donner une suite favorable.
+            Nous avons examiné votre demande d&apos;accès à Selav et ne sommes malheureusement pas
+            en mesure d&apos;y donner une suite favorable.
           </p>
 
           {/* Motif de refus */}

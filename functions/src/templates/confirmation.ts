@@ -26,17 +26,17 @@ function getRoleLabel(role: string): string {
 
 export function getConfirmationEmailTemplate(user: UserData) {
   return {
-    subject: "Demande d'accès reçue - Super Assistant Médical",
+    subject: "Demande d'accès reçue - Selav",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #2563eb; margin: 0;">Super Assistant Médical</h1>
+          <h1 style="color: #2563eb; margin: 0;">Selav</h1>
         </div>
 
         <h2 style="color: #1f2937;">Bonjour ${user.displayName},</h2>
 
         <p style="color: #4b5563; line-height: 1.6;">
-          Nous avons bien reçu votre demande d'accès à <strong>Super Assistant Médical</strong>.
+          Nous avons bien reçu votre demande d'accès à <strong>Selav</strong>.
         </p>
 
         <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">

@@ -188,7 +188,7 @@ export function CRCTemplate({
         <PDFSignature praticien={praticien} />
 
         {/* Footer */}
-        <PDFFooter text="Document généré par Super Assistant Médical" />
+        <PDFFooter text="Document généré par Selav" />
       </Page>
     </Document>
   );

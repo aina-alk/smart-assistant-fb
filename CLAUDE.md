@@ -1,8 +1,8 @@
-# CLAUDE.md — Super Assistant Médical Chirurgien
+# CLAUDE.md — Selav
 
 ## Contexte Projet
 
-**Application** : Super Assistant Médical — Assistant IA pour chirurgiens ORL
+**Application** : Selav — Assistant IA pour chirurgiens ORL
 **Objectif** : Automatiser la documentation médicale (CRC, CRO, ordonnances, codage)
 **Cible** : Chirurgiens ORL (puis extensible autres spécialités)
 **Phase** : MVP 1.0 — Consultation Core

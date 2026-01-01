@@ -7,17 +7,17 @@ import { config } from '../config';
 
 export function getRejectionEmailTemplate(user: UserData) {
   return {
-    subject: 'Suite à votre demande - Super Assistant Médical',
+    subject: 'Suite à votre demande - Selav',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #2563eb; margin: 0;">Super Assistant Médical</h1>
+          <h1 style="color: #2563eb; margin: 0;">Selav</h1>
         </div>
 
         <h2 style="color: #1f2937;">Bonjour ${user.displayName},</h2>
 
         <p style="color: #4b5563; line-height: 1.6;">
-          Nous vous remercions pour l'intérêt que vous portez à Super Assistant Médical.
+          Nous vous remercions pour l'intérêt que vous portez à Selav.
         </p>
 
         <p style="color: #4b5563; line-height: 1.6;">

@@ -31,10 +31,7 @@ export function Sidebar({ navItems, homeHref, className }: SidebarProps) {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Stethoscope className="h-5 w-5 text-primary-foreground" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Super Assistant</span>
-            <span className="text-xs text-muted-foreground">Médical</span>
-          </div>
+          <span className="text-lg font-semibold">Selav</span>
         </Link>
       </div>
 

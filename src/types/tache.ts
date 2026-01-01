@@ -89,12 +89,11 @@ export interface FHIRTask {
 // Constantes FHIR
 // ============================================================================
 
-export const TASK_CATEGORY_SYSTEM =
-  'https://super-assistant-medical.fr/fhir/CodeSystem/task-category';
+export const TASK_CATEGORY_SYSTEM = 'https://selav.fr/fhir/CodeSystem/task-category';
 
 export const TASK_EXTENSION_URLS = {
-  rappel: 'https://super-assistant-medical.fr/fhir/StructureDefinition/task-reminder',
-  titre: 'https://super-assistant-medical.fr/fhir/StructureDefinition/task-title',
+  rappel: 'https://selav.fr/fhir/StructureDefinition/task-reminder',
+  titre: 'https://selav.fr/fhir/StructureDefinition/task-title',
 } as const;
 
 // ============================================================================

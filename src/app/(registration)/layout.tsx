@@ -16,7 +16,7 @@ export default function RegistrationLayout({ children }: { children: React.React
               <Stethoscope className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Super Assistant Médical</h1>
+              <h1 className="text-lg font-bold text-gray-900">Selav</h1>
               <p className="text-xs text-muted-foreground">
                 Votre assistant IA pour la documentation médicale
               </p>

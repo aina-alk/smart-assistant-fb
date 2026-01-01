@@ -16,7 +16,7 @@ export default function InscriptionPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">Demande d&apos;accès</h1>
           <p className="mt-2 text-muted-foreground">
-            Complétez ce formulaire pour demander l&apos;accès à Super Assistant Médical
+            Complétez ce formulaire pour demander l&apos;accès à Selav
           </p>
         </div>
 

@@ -50,7 +50,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Stethoscope className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Super Assistant</span>
+            <span className="font-bold text-xl">Selav</span>
             <Badge variant="secondary" className="text-xs">
               Beta
             </Badge>
@@ -493,7 +493,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Stethoscope className="h-5 w-5 text-primary" />
-                <span className="font-bold">Super Assistant</span>
+                <span className="font-bold">Selav</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 L&apos;assistant IA pour les professionnels de santé
@@ -561,9 +561,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2024 Super Assistant Médical. Tous droits réservés.
-            </p>
+            <p className="text-sm text-muted-foreground">© 2024 Selav. Tous droits réservés.</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Shield className="h-4 w-4" />

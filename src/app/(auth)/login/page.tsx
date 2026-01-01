@@ -90,9 +90,7 @@ function LoginContent() {
           </svg>
         </div>
         <div>
-          <CardTitle className="text-2xl font-bold text-foreground">
-            Super Assistant Médical
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-foreground">Selav</CardTitle>
           <CardDescription className="text-base mt-2">
             L&apos;IA qui rédige pour vous pendant que vous soignez vos patients
           </CardDescription>

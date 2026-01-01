@@ -7,18 +7,18 @@ import { config } from '../config';
 
 export function getWelcomeEmailTemplate(user: UserData) {
   return {
-    subject: 'Bienvenue sur Super Assistant Médical !',
+    subject: 'Bienvenue sur Selav !',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #059669; margin: 0;">Super Assistant Médical</h1>
+          <h1 style="color: #059669; margin: 0;">Selav</h1>
         </div>
 
         <h2 style="color: #059669;">Bonjour ${user.displayName},</h2>
 
         <p style="color: #4b5563; line-height: 1.6;">
           Excellente nouvelle ! Suite à notre entretien, votre compte
-          <strong>Super Assistant Médical</strong> est maintenant <strong>actif</strong>.
+          <strong>Selav</strong> est maintenant <strong>actif</strong>.
         </p>
 
         <div style="background: #d1fae5; padding: 30px; border-radius: 8px; margin: 30px 0; text-align: center;">

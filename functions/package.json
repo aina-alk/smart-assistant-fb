@@ -1,7 +1,7 @@
 {
-  "name": "super-assistant-medical-functions",
+  "name": "selav-functions",
   "version": "1.0.0",
-  "description": "Cloud Functions pour Super Assistant Médical",
+  "description": "Cloud Functions pour Selav",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",

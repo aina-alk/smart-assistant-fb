@@ -57,9 +57,7 @@ export default function DemandeEnvoyeePage() {
           <CheckCircle className="h-10 w-10 text-green-600" />
         </div>
         <h1 className="mt-4 text-2xl font-bold text-gray-900">Demande envoyée avec succès !</h1>
-        <p className="mt-2 text-muted-foreground">
-          Merci pour votre demande d&apos;accès à Super Assistant Médical.
-        </p>
+        <p className="mt-2 text-muted-foreground">Merci pour votre demande d&apos;accès à Selav.</p>
       </div>
 
       {/* Prochaine étape */}
