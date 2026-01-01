@@ -1,12 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, FileText, Calendar, Stethoscope, ChevronRight } from 'lucide-react';
+import { Plus, FileText, Calendar, Stethoscope, ChevronRight, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useConsultations } from '@/lib/hooks/use-consultations';
 import type { Patient, Consultation, ConsultationStatut } from '@/types';
 
@@ -27,16 +39,31 @@ const STATUT_CONFIG: Record<
 function ConsultationCard({
   consultation,
   onClick,
+  onDelete,
 }: {
   consultation: Consultation;
   onClick: () => void;
+  onDelete: (id: string) => Promise<void>;
 }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const statusConfig = STATUT_CONFIG[consultation.statut];
+  const canDelete = consultation.statut !== 'termine';
   const dateFormatted = consultation.date.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(consultation.id);
+    } finally {
+      setIsDeleting(false);
+      setDialogOpen(false);
+    }
+  };
 
   return (
     <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={onClick}>
@@ -64,6 +91,48 @@ function ConsultationCard({
           </div>
         </div>
 
+        {canDelete && (
+          <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDialogOpen(true);
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer cette consultation ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. La consultation sera définitivement supprimée du
+                  dossier FHIR.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? 'Suppression...' : 'Supprimer'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
         <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
       </CardContent>
     </Card>
@@ -90,7 +159,7 @@ function TimelineSkeleton() {
 
 export function PatientTimeline({ patient }: PatientTimelineProps) {
   const router = useRouter();
-  const { data, isLoading, isError } = useConsultations({ patientId: patient.id });
+  const { data, isLoading, isError, refetch } = useConsultations({ patientId: patient.id });
 
   const handleNewConsultation = () => {
     router.push(`/medecin/consultation/new?patientId=${patient.id}`);
@@ -98,6 +167,17 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
 
   const handleViewConsultation = (consultationId: string) => {
     router.push(`/medecin/consultation/${consultationId}`);
+  };
+
+  const handleDeleteConsultation = async (consultationId: string) => {
+    const response = await fetch(`/api/consultations/${consultationId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la suppression');
+    }
+    await refetch();
   };
 
   return (
@@ -125,6 +205,7 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
               key={consultation.id}
               consultation={consultation}
               onClick={() => handleViewConsultation(consultation.id)}
+              onDelete={handleDeleteConsultation}
             />
           ))}
         </div>
