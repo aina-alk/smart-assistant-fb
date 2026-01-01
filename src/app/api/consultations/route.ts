@@ -9,7 +9,62 @@ import { fhirClient, FHIRError } from '@/lib/api/fhir-client';
 import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
 import { consultationFormSchema } from '@/lib/validations/consultation';
 import { consultationToFHIR, fhirToConsultation } from '@/types/consultation';
-import type { Encounter } from '@/types/fhir';
+import type { Encounter, Practitioner } from '@/types/fhir';
+import type { DecodedIdToken } from 'firebase-admin/auth';
+
+/**
+ * S'assure que le Practitioner existe dans le FHIR store.
+ * Le crée avec les informations Firebase si inexistant.
+ */
+async function ensurePractitionerExists(user: DecodedIdToken): Promise<void> {
+  if (!fhirClient) return;
+
+  const practitionerId = user.uid;
+
+  try {
+    // Essayer de lire le Practitioner existant
+    await fhirClient.read<Practitioner>('Practitioner', practitionerId);
+  } catch (error) {
+    // Si 404 (n'existe pas), le créer
+    if (error instanceof FHIRError && error.statusCode === 404) {
+      // Extraire nom et prénom depuis displayName ou email
+      const displayName = user.name || user.email?.split('@')[0] || 'Praticien';
+      const nameParts = displayName.split(' ');
+      const given = nameParts.slice(0, -1).join(' ') || displayName;
+      const family = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+
+      const practitioner: Practitioner = {
+        resourceType: 'Practitioner',
+        id: practitionerId,
+        active: true,
+        name: [
+          {
+            use: 'official',
+            text: displayName,
+            family: family || undefined,
+            given: given ? [given] : undefined,
+          },
+        ],
+        telecom: user.email
+          ? [
+              {
+                system: 'email',
+                value: user.email,
+                use: 'work',
+              },
+            ]
+          : undefined,
+      };
+
+      // Utiliser PUT pour créer avec l'ID spécifié
+      await fhirClient.update<Practitioner>('Practitioner', practitionerId, practitioner);
+      console.warn(`Practitioner créé: ${practitionerId}`);
+    } else {
+      // Autre erreur, la propager
+      throw error;
+    }
+  }
+}
 
 /**
  * GET - Lister les consultations avec pagination et filtres
@@ -107,6 +162,9 @@ export async function POST(request: NextRequest) {
     if (!fhirClient) {
       return NextResponse.json({ error: 'Service FHIR non configuré' }, { status: 503 });
     }
+
+    // S'assurer que le Practitioner existe (le créer si nécessaire)
+    await ensurePractitionerExists(authResult.user);
 
     // Parser et valider le body
     const body = await request.json();
