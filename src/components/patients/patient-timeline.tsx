@@ -15,7 +15,7 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
 
   const handleNewConsultation = () => {
     // Rediriger vers la page de nouvelle consultation avec le patient pré-sélectionné
-    router.push(`/dashboard/consultation/new?patientId=${patient.id}`);
+    router.push(`/medecin/consultation/new?patientId=${patient.id}`);
   };
 
   // Pour l'instant, afficher un empty state (les consultations seront ajoutées plus tard)

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -11,12 +11,16 @@ import {
   XCircle,
   Loader2,
   FileEdit,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/hooks/use-auth';
 import type { Consultation, ConsultationStatut } from '@/types/consultation';
+import type { Patient } from '@/types/patient';
 import { isConsultationEditable } from '@/types/consultation';
+import { getPatientFullName, getPatientAge } from '@/types/patient';
 
 // ============================================================================
 // Types
@@ -24,6 +28,7 @@ import { isConsultationEditable } from '@/types/consultation';
 
 interface ConsultationHeaderProps {
   consultation: Consultation;
+  patient?: Patient | null;
   className?: string;
   backHref?: string;
   onEdit?: () => void;
@@ -69,11 +74,14 @@ const STATUS_CONFIG: Record<
 
 export function ConsultationHeader({
   consultation,
+  patient,
   className,
   backHref,
   onEdit,
 }: ConsultationHeaderProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleBack = useCallback(() => {
     if (backHref) {
@@ -91,6 +99,61 @@ export function ConsultationHeader({
     }
   }, [router, consultation.id, onEdit]);
 
+  const handleDownloadPDF = useCallback(async () => {
+    if (!consultation.crc || !patient) return;
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`/api/documents/${consultation.id}/pdf?type=crc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          crc: consultation.crc,
+          patient: {
+            nom: patient.nom,
+            prenom: patient.prenom,
+            dateNaissance: patient.dateNaissance.toISOString(),
+            age: getPatientAge(patient),
+            sexe: patient.sexe,
+          },
+          praticien: user?.displayName
+            ? {
+                nom: user.displayName,
+                specialite: 'ORL',
+              }
+            : undefined,
+          date: consultation.date.toISOString(),
+          diagnostics: consultation.diagnostics,
+          codage: consultation.codage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération du PDF');
+      }
+
+      // Télécharger le fichier
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Nom du fichier : CRC_NOM_Prenom_date.pdf
+      const patientName = getPatientFullName(patient).replace(/\s+/g, '_');
+      const dateStr = consultation.date.toISOString().split('T')[0];
+      link.download = `CRC_${patientName}_${dateStr}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur téléchargement PDF:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [consultation, patient, user]);
+
   // Format date
   const formattedDate = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'long',
@@ -106,6 +169,7 @@ export function ConsultationHeader({
 
   const statusConfig = STATUS_CONFIG[consultation.statut];
   const canEdit = isConsultationEditable(consultation);
+  const canDownloadPDF = !!consultation.crc && !!patient;
 
   return (
     <div
@@ -143,6 +207,21 @@ export function ConsultationHeader({
 
       {/* Right side: Actions */}
       <div className="flex items-center gap-2 sm:self-start">
+        {canDownloadPDF && (
+          <Button
+            variant="outline"
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="gap-2"
+          >
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            PDF
+          </Button>
+        )}
         {canEdit && (
           <Button onClick={handleEdit} className="gap-2">
             <Edit2 className="h-4 w-4" />
