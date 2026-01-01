@@ -75,7 +75,11 @@ export const tacheFormSchema = z.object({
     })
     .optional(),
 
-  patientId: z.string().optional(),
+  patientId: z
+    .string({
+      required_error: 'Le patient est requis',
+    })
+    .min(1, 'Le patient est requis'),
 
   consultationId: z.string().optional(),
 });

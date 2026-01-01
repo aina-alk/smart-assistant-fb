@@ -8,6 +8,7 @@ import type { Tache, TachePriorite } from '@/types/tache';
 
 interface TacheListProps {
   taches: Tache[];
+  patientsMap?: Map<string, string>;
   isLoading?: boolean;
   onComplete?: (id: string) => void;
   onEdit?: (tache: Tache) => void;
@@ -40,6 +41,7 @@ function groupByPriorite(taches: Tache[]): Map<TachePriorite, Tache[]> {
 
 export function TacheList({
   taches,
+  patientsMap,
   isLoading = false,
   onComplete,
   onEdit,
@@ -81,6 +83,7 @@ export function TacheList({
                 <TacheCard
                   key={tache.id}
                   tache={tache}
+                  patientName={tache.patientId ? patientsMap?.get(tache.patientId) : undefined}
                   onComplete={onComplete}
                   onEdit={onEdit}
                   onDelete={onDelete}
@@ -102,6 +105,7 @@ export function TacheList({
               <TacheCard
                 key={tache.id}
                 tache={tache}
+                patientName={tache.patientId ? patientsMap?.get(tache.patientId) : undefined}
                 onComplete={onComplete}
                 onEdit={onEdit}
                 onDelete={onDelete}
