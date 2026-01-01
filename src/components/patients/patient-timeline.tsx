@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { Plus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/empty-state';
 import type { Patient } from '@/types';
 
 interface PatientTimelineProps {
@@ -29,18 +30,16 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
       </div>
 
       {/* Empty state */}
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <CalendarPlus className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-lg font-medium text-muted-foreground">Aucune consultation</p>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Ce patient n&apos;a pas encore de consultation enregistrée.
-        </p>
-        <Button variant="outline" onClick={handleNewConsultation}>
-          <Plus className="mr-2 h-4 w-4" />
-          Créer la première consultation
-        </Button>
+      <div className="rounded-lg border border-dashed">
+        <EmptyState
+          icon={FileText}
+          title="Aucune consultation"
+          description="Ce patient n'a pas encore de consultation enregistrée."
+          action={{
+            label: '+ Créer la première consultation',
+            onClick: handleNewConsultation,
+          }}
+        />
       </div>
     </div>
   );
