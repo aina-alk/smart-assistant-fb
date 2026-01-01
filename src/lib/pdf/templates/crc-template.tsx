@@ -43,8 +43,7 @@ export interface CRCTemplateProps {
 
 function ExamenSection({ examen }: { examen: CRCExamen }) {
   const examItems: Array<{ label: string; value: string | null }> = [
-    { label: 'Otoscopie droite', value: examen.otoscopie_droite },
-    { label: 'Otoscopie gauche', value: examen.otoscopie_gauche },
+    { label: 'Otoscopie', value: examen.otoscopie },
     { label: 'Rhinoscopie', value: examen.rhinoscopie },
     { label: 'Oropharynx', value: examen.oropharynx },
     { label: 'Palpation cervicale', value: examen.palpation_cervicale },
