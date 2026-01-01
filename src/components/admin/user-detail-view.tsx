@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +51,7 @@ const CALLBACK_SLOT_LABELS: Record<string, string> = {
 };
 
 export function UserDetailView({ user, onSuccess }: UserDetailViewProps) {
+  const router = useRouter();
   const [interviewNotes, setInterviewNotes] = useState(user.interviewNotes || '');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const { approveUser, rejectUser, updateUserStatus, isLoading } = useAdminActions();
@@ -75,8 +77,9 @@ export function UserDetailView({ user, onSuccess }: UserDetailViewProps) {
       setShowRejectModal(false);
       onSuccess?.();
     } catch (error) {
-      toast.error('Erreur lors du rejet');
       console.error(error);
+      toast.error('Erreur système - veuillez contacter le support si le problème persiste');
+      router.push('/admin/demandes');
     }
   };
 
