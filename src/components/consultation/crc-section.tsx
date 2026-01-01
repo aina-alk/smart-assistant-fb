@@ -143,10 +143,20 @@ export function CRCSection({
       )}
     >
       {/* Header */}
-      <button
-        type="button"
+      <div
+        role={onToggle ? 'button' : undefined}
+        tabIndex={onToggle ? 0 : undefined}
         onClick={onToggle}
-        disabled={!onToggle}
+        onKeyDown={
+          onToggle
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onToggle();
+                }
+              }
+            : undefined
+        }
         className={cn(
           'flex w-full items-center justify-between p-3 text-left',
           onToggle && 'hover:bg-muted/50 transition-colors cursor-pointer',
@@ -223,7 +233,7 @@ export function CRCSection({
             </>
           )}
         </div>
-      </button>
+      </div>
 
       {/* Content */}
       {expanded && (

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AudioRecorder } from './audio-recorder';
 import { TranscriptionDisplay } from './transcription-display';
 import { useTranscriptionUpload } from '@/lib/hooks/use-transcription-upload';
 import { useAudioStore } from '@/lib/stores/audio-store';
+import { useConsultationStore } from '@/lib/stores/consultation-store';
 import { cn } from '@/lib/utils';
 
 interface DictationPanelProps {
@@ -21,6 +22,7 @@ export function DictationPanel({
   className,
 }: DictationPanelProps) {
   const audioDuration = useAudioStore((state) => state.duration);
+  const isGeneratingCRC = useConsultationStore((state) => state.isGeneratingCRC);
 
   const {
     status,
@@ -104,9 +106,23 @@ export function DictationPanel({
       )}
 
       {canGenerateCRC && (
-        <Button onClick={handleGenerateCRC} className="w-full gap-2" size="lg">
-          <FileText className="h-5 w-5" />
-          Générer le compte-rendu de consultation
+        <Button
+          onClick={handleGenerateCRC}
+          className="w-full gap-2"
+          size="lg"
+          disabled={isGeneratingCRC}
+        >
+          {isGeneratingCRC ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Génération en cours...
+            </>
+          ) : (
+            <>
+              <FileText className="h-5 w-5" />
+              Générer le compte-rendu de consultation
+            </>
+          )}
         </Button>
       )}
     </div>
