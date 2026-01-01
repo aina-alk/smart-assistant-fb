@@ -4,6 +4,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Stethoscope, ClipboardList, Calendar } from 'lucide-react';
+import { TachesWidget } from '@/components/dashboard/taches-widget';
 
 const stats = [
   {
@@ -57,20 +58,12 @@ export default function MedecinDashboardPage() {
         ))}
       </div>
 
-      {/* Quick actions */}
+      {/* Main content grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
-            <CardDescription>Accédez rapidement aux fonctionnalités principales</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Les raccourcis seront disponibles prochainement.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Taches Widget */}
+        <TachesWidget />
 
+        {/* Activité récente */}
         <Card>
           <CardHeader>
             <CardTitle>Activité récente</CardTitle>
