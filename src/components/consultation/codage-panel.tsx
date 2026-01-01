@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Search, Sparkles, Check, Loader2, AlertCircle, Euro } from 'lucide-react';
+import { toast } from 'sonner';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,8 @@ interface CodagePanelProps {
 
 type SuggestionStatus = 'idle' | 'loading' | 'success' | 'error';
 
+const AUTO_APPLY_CONFIDENCE_THRESHOLD = 0.7;
+
 export function CodagePanel({
   onCodageChange,
   initialCodage,
@@ -56,6 +59,7 @@ export function CodagePanel({
   const [ccamResults, setCcamResults] = useState<CCAMCode[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [autoAppliedCodes, setAutoAppliedCodes] = useState<Set<string>>(new Set());
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -122,14 +126,45 @@ export function CodagePanel({
       }
 
       const data = await response.json();
-      setSuggestions(data.suggestions.actes);
+      const allSuggestions: ActeSuggestion[] = data.suggestions.actes;
+      setSuggestions(allSuggestions);
+
+      // AUTO-APPLY: Ajouter automatiquement les suggestions confiance >= 70%
+      const toAutoApply = allSuggestions.filter(
+        (s) => s.confiance >= AUTO_APPLY_CONFIDENCE_THRESHOLD
+      );
+
+      const newAutoAppliedCodes = new Set<string>();
+      const newActes: ActeFacturable[] = [];
+
+      toAutoApply.forEach((suggestion) => {
+        if (!actes.some((a) => a.code === suggestion.code)) {
+          newActes.push({
+            type: suggestion.type,
+            code: suggestion.code,
+            libelle: suggestion.libelle,
+            tarif_base: suggestion.tarif_base,
+            selected: true,
+          });
+          newAutoAppliedCodes.add(suggestion.code);
+        }
+      });
+
+      if (newActes.length > 0) {
+        setActes((prev) => [...prev, ...newActes]);
+        setAutoAppliedCodes(newAutoAppliedCodes);
+        toast.success(
+          `${newActes.length} acte${newActes.length > 1 ? 's' : ''} ajouté${newActes.length > 1 ? 's' : ''} automatiquement`
+        );
+      }
+
       setSuggestionStatus('success');
     } catch (error) {
       console.error('Erreur suggestion codage:', error);
       setSuggestionError(error instanceof Error ? error.message : 'Erreur inconnue');
       setSuggestionStatus('error');
     }
-  }, [crcText, diagnostics]);
+  }, [crcText, diagnostics, actes]);
 
   const addActe = useCallback(
     (acte: ActeFacturable) => {
@@ -143,6 +178,11 @@ export function CodagePanel({
 
   const removeActe = useCallback((code: string) => {
     setActes((prev) => prev.filter((a) => a.code !== code));
+    setAutoAppliedCodes((prev) => {
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
   }, []);
 
   const applySuggestion = useCallback(
@@ -400,6 +440,12 @@ export function CodagePanel({
                     <span className="text-sm text-muted-foreground truncate max-w-[200px]">
                       {acte.libelle}
                     </span>
+                    {autoAppliedCodes.has(acte.code) && (
+                      <span className="text-xs text-primary flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        IA
+                      </span>
+                    )}
                   </div>
                   <span className="font-medium">{formatPrice(acte.tarif_base)}</span>
                 </div>

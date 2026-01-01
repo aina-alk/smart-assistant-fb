@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Search, Sparkles, X, Check, Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { getCIM10ByCode } from '@/lib/constants/cim10-codes';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,8 @@ interface DiagnosticSelectorProps {
 
 type ExtractionStatus = 'idle' | 'loading' | 'success' | 'error';
 
+const AUTO_APPLY_CONFIDENCE_THRESHOLD = 0.7;
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -61,6 +64,7 @@ export function DiagnosticSelector({
   const [extractionStatus, setExtractionStatus] = useState<ExtractionStatus>('idle');
   const [suggestions, setSuggestions] = useState<DiagnosticSuggestion[]>([]);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [autoAppliedCodes, setAutoAppliedCodes] = useState<Set<string>>(new Set());
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -123,13 +127,68 @@ export function DiagnosticSelector({
 
       allSuggestions.push(...data.suggestions.secondaires);
       setSuggestions(allSuggestions);
+
+      // AUTO-APPLY: Ajouter automatiquement les suggestions confiance >= 70%
+      const newAutoAppliedCodes = new Set<string>();
+      let appliedCount = 0;
+
+      // Auto-apply principal if high confidence and no principal selected
+      const principalSugg = allSuggestions.find((s) => s.isPrincipal);
+      if (
+        principalSugg &&
+        principalSugg.confiance >= AUTO_APPLY_CONFIDENCE_THRESHOLD &&
+        !principal
+      ) {
+        const fullCode = getCIM10ByCode(principalSugg.code);
+        const code: CIM10Code = fullCode ?? {
+          code: principalSugg.code,
+          libelle: principalSugg.libelle,
+          libelle_court: principalSugg.libelle,
+          categorie: 'Général' as CIM10Category,
+        };
+        setPrincipal(code);
+        newAutoAppliedCodes.add(principalSugg.code);
+        appliedCount++;
+      }
+
+      // Auto-apply secondaires with high confidence (respecting max 3 limit)
+      const secondaireSuggs = allSuggestions.filter(
+        (s) => !s.isPrincipal && s.confiance >= AUTO_APPLY_CONFIDENCE_THRESHOLD
+      );
+      let currentSecondairesCount = secondaires.length;
+
+      for (const sugg of secondaireSuggs) {
+        if (currentSecondairesCount >= 3) break;
+        if (principal?.code === sugg.code || secondaires.some((s) => s.code === sugg.code))
+          continue;
+
+        const fullCode = getCIM10ByCode(sugg.code);
+        const code: CIM10Code = fullCode ?? {
+          code: sugg.code,
+          libelle: sugg.libelle,
+          libelle_court: sugg.libelle,
+          categorie: 'Général' as CIM10Category,
+        };
+        setSecondaires((prev) => [...prev, code]);
+        newAutoAppliedCodes.add(sugg.code);
+        appliedCount++;
+        currentSecondairesCount++;
+      }
+
+      if (appliedCount > 0) {
+        setAutoAppliedCodes(newAutoAppliedCodes);
+        toast.success(
+          `${appliedCount} diagnostic${appliedCount > 1 ? 's' : ''} ajouté${appliedCount > 1 ? 's' : ''} automatiquement`
+        );
+      }
+
       setExtractionStatus('success');
     } catch (error) {
       console.error('Erreur extraction CIM-10:', error);
       setExtractionError(error instanceof Error ? error.message : 'Erreur inconnue');
       setExtractionStatus('error');
     }
-  }, [diagnosticText]);
+  }, [diagnosticText, principal, secondaires]);
 
   // Selection handlers
   const selectCode = useCallback(
@@ -167,11 +226,23 @@ export function DiagnosticSelector({
   );
 
   const removePrincipal = useCallback(() => {
+    if (principal) {
+      setAutoAppliedCodes((prev) => {
+        const next = new Set(prev);
+        next.delete(principal.code);
+        return next;
+      });
+    }
     setPrincipal(null);
-  }, []);
+  }, [principal]);
 
   const removeSecondaire = useCallback((code: string) => {
     setSecondaires((prev) => prev.filter((s) => s.code !== code));
+    setAutoAppliedCodes((prev) => {
+      const next = new Set(prev);
+      next.delete(code);
+      return next;
+    });
   }, []);
 
   const applySuggestion = useCallback(
@@ -348,6 +419,12 @@ export function DiagnosticSelector({
               <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/20">
                 <span className="font-mono text-sm font-medium">{principal.code}</span>
                 <span className="text-sm flex-1 truncate">{principal.libelle}</span>
+                {autoAppliedCodes.has(principal.code) && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    IA
+                  </span>
+                )}
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={removePrincipal}>
                   <X className="h-3 w-3" />
                 </Button>
@@ -373,6 +450,12 @@ export function DiagnosticSelector({
                   >
                     <span className="font-mono text-sm">{code.code}</span>
                     <span className="text-sm flex-1 truncate">{code.libelle}</span>
+                    {autoAppliedCodes.has(code.code) && (
+                      <span className="text-xs text-primary flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        IA
+                      </span>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
