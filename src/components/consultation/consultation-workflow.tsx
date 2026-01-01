@@ -84,6 +84,7 @@ function useAutoSave(interval: number = 900000) {
   const motif = useConsultationStore((s) => s.motif);
   const setIsSaving = useConsultationStore((s) => s.setIsSaving);
   const markAsSaved = useConsultationStore((s) => s.markAsSaved);
+  const setConsultationId = useConsultationStore((s) => s.setConsultationId);
 
   const { mutateAsync: createConsultation } = useCreateConsultation();
   const { mutateAsync: updateConsultation } = useUpdateConsultation();
@@ -114,7 +115,8 @@ function useAutoSave(interval: number = 900000) {
           data: consultationData,
         });
       } else {
-        await createConsultation(consultationData);
+        const result = await createConsultation(consultationData);
+        setConsultationId(result.id);
       }
 
       markAsSaved();
@@ -136,6 +138,7 @@ function useAutoSave(interval: number = 900000) {
     codage,
     setIsSaving,
     markAsSaved,
+    setConsultationId,
     createConsultation,
     updateConsultation,
   ]);
@@ -342,6 +345,7 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
   const isSaving = useConsultationStore((s) => s.isSaving);
   const setIsSaving = useConsultationStore((s) => s.setIsSaving);
   const markStepComplete = useConsultationStore((s) => s.markStepComplete);
+  const setConsultationId = useConsultationStore((s) => s.setConsultationId);
   const reset = useConsultationStore((s) => s.reset);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -380,6 +384,7 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
       } else {
         const result = await createConsultation(consultationData);
         savedId = result.id;
+        setConsultationId(savedId);
       }
 
       markStepComplete('validation');
@@ -402,6 +407,7 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
     consultationId,
     setIsSaving,
     markStepComplete,
+    setConsultationId,
     createConsultation,
     updateConsultation,
     onComplete,

@@ -101,6 +101,7 @@ interface ConsultationActions {
   setError: (error: string | null) => void;
 
   // Lifecycle
+  setConsultationId: (id: string) => void;
   loadConsultation: (id: string, data: Partial<ConsultationState>) => void;
   reset: () => void;
 
@@ -256,6 +257,10 @@ export const useConsultationStore = create<ConsultationStore>()(
     // ========================================================================
     // Lifecycle Actions
     // ========================================================================
+
+    setConsultationId: (id) => {
+      set({ consultationId: id });
+    },
 
     loadConsultation: (id, data) => {
       set({
