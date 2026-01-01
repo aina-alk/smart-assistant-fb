@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -8,6 +8,7 @@ import {
   Calendar,
   Stethoscope,
   ChevronRight,
+  ChevronDown,
   Trash2,
   Loader2,
   Pill,
@@ -30,6 +31,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { OrdonnanceViewDialog } from '@/components/ordonnance/ordonnance-dialog';
+import { BilanViewDialog } from '@/components/bilan/bilan-dialog';
 import { useConsultations } from '@/lib/hooks/use-consultations';
 import {
   type Patient,
@@ -44,18 +48,20 @@ import type { BilanPrescription } from '@/types/bilan';
 // Types pour la timeline unifiée
 // ============================================================================
 
-type TimelineItemType = 'consultation' | 'ordonnance' | 'bilan';
-
-interface TimelineItem {
-  id: string;
-  type: TimelineItemType;
-  date: Date;
-  consultationId: string;
-  data: Consultation | Ordonnance | BilanPrescription;
+interface ConsultationWithPrescriptions {
+  consultation: Consultation;
+  ordonnances: Ordonnance[];
+  bilans: BilanPrescription[];
 }
 
 interface PatientTimelineProps {
   patient: Patient;
+}
+
+interface PreviewState {
+  type: 'ordonnance' | 'bilan' | null;
+  ordonnance: Ordonnance | null;
+  bilan: BilanPrescription | null;
 }
 
 const STATUT_CONFIG: Record<
@@ -172,108 +178,83 @@ function ConsultationCard({
 }
 
 // ============================================================================
-// Ordonnance Card
+// Ordonnance Inline Item (nested in consultation)
 // ============================================================================
 
-function OrdonnanceCard({ ordonnance, onClick }: { ordonnance: Ordonnance; onClick: () => void }) {
-  const dateFormatted = new Date(ordonnance.date).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
+function OrdonnanceInlineItem({
+  ordonnance,
+  onClick,
+}: {
+  ordonnance: Ordonnance;
+  onClick: () => void;
+}) {
   const medicamentCount = ordonnance.medicaments.length;
 
   return (
-    <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={onClick}>
-      <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-          <Pill className="h-5 w-5 text-emerald-600" />
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors text-left"
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10">
+        <Pill className="h-4 w-4 text-emerald-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">Ordonnance</p>
+          <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-300">
+            {medicamentCount} médicament{medicamentCount > 1 ? 's' : ''}
+          </Badge>
         </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-medium truncate">Ordonnance</p>
-            <Badge variant="outline" className="shrink-0 text-emerald-700 border-emerald-300">
-              {medicamentCount} médicament{medicamentCount > 1 ? 's' : ''}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{dateFormatted}</span>
-            {ordonnance.medicaments.length > 0 && (
-              <>
-                <span className="mx-1">•</span>
-                <span className="truncate">{ordonnance.medicaments[0].nom}</span>
-                {ordonnance.medicaments.length > 1 && (
-                  <span className="text-muted-foreground">
-                    {' '}
-                    +{ordonnance.medicaments.length - 1}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-      </CardContent>
-    </Card>
+        {ordonnance.medicaments.length > 0 && (
+          <p className="text-xs text-muted-foreground truncate">
+            {ordonnance.medicaments[0].nom}
+            {ordonnance.medicaments.length > 1 && ` +${ordonnance.medicaments.length - 1}`}
+          </p>
+        )}
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+    </button>
   );
 }
 
 // ============================================================================
-// Bilan Card
+// Bilan Inline Item (nested in consultation)
 // ============================================================================
 
-function BilanCard({ bilan, onClick }: { bilan: BilanPrescription; onClick: () => void }) {
-  const dateFormatted = new Date(bilan.date).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
+function BilanInlineItem({ bilan, onClick }: { bilan: BilanPrescription; onClick: () => void }) {
   const examenCount = bilan.examens.length;
   const hasUrgent = bilan.examens.some((e) => e.urgent);
 
   return (
-    <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={onClick}>
-      <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-          <TestTube className="h-5 w-5 text-blue-600" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-medium truncate">Bilan / Examens</p>
-            <Badge variant="outline" className="shrink-0 text-blue-700 border-blue-300">
-              {examenCount} examen{examenCount > 1 ? 's' : ''}
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors text-left"
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10">
+        <TestTube className="h-4 w-4 text-blue-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">Bilan / Examens</p>
+          <Badge variant="outline" className="text-xs text-blue-700 border-blue-300">
+            {examenCount} examen{examenCount > 1 ? 's' : ''}
+          </Badge>
+          {hasUrgent && (
+            <Badge variant="destructive" className="text-xs gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Urgent
             </Badge>
-            {hasUrgent && (
-              <Badge variant="destructive" className="shrink-0 gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                Urgent
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{dateFormatted}</span>
-            {bilan.examens.length > 0 && (
-              <>
-                <span className="mx-1">•</span>
-                <span className="truncate">{bilan.examens[0].code}</span>
-                {bilan.examens.length > 1 && (
-                  <span className="text-muted-foreground"> +{bilan.examens.length - 1}</span>
-                )}
-              </>
-            )}
-          </div>
+          )}
         </div>
-
-        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-      </CardContent>
-    </Card>
+        {bilan.examens.length > 0 && (
+          <p className="text-xs text-muted-foreground truncate">
+            {bilan.examens[0].code}
+            {bilan.examens.length > 1 && ` +${bilan.examens.length - 1}`}
+          </p>
+        )}
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+    </button>
   );
 }
 
@@ -299,115 +280,273 @@ function TimelineSkeleton() {
   );
 }
 
+// ============================================================================
+// Consultation Card with Prescriptions (nested ordonnances/bilans)
+// ============================================================================
+
+function ConsultationCardWithPrescriptions({
+  item,
+  onViewConsultation,
+  onDeleteConsultation,
+  onViewOrdonnance,
+  onViewBilan,
+}: {
+  item: ConsultationWithPrescriptions;
+  onViewConsultation: (consultation: Consultation) => void;
+  onDeleteConsultation: (id: string) => Promise<void>;
+  onViewOrdonnance: (ordonnance: Ordonnance) => void;
+  onViewBilan: (bilan: BilanPrescription) => void;
+}) {
+  const hasPrescriptions = item.ordonnances.length > 0 || item.bilans.length > 0;
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!hasPrescriptions) {
+    return (
+      <ConsultationCard
+        consultation={item.consultation}
+        onClick={() => onViewConsultation(item.consultation)}
+        onDelete={onDeleteConsultation}
+      />
+    );
+  }
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="overflow-hidden">
+        <CollapsibleTrigger asChild>
+          <CardContent
+            className="flex items-center gap-4 p-4 cursor-pointer transition-colors hover:bg-muted/50"
+            onClick={(e) => {
+              // Si on clique sur le bouton supprimer, ne pas toggle
+              if ((e.target as HTMLElement).closest('button[data-delete]')) {
+                return;
+              }
+            }}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Stethoscope className="h-5 w-5 text-primary" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-medium truncate">{item.consultation.motif || 'Consultation'}</p>
+                <Badge
+                  variant={STATUT_CONFIG[item.consultation.statut].variant}
+                  className="shrink-0"
+                >
+                  {STATUT_CONFIG[item.consultation.statut].label}
+                </Badge>
+                <Badge variant="secondary" className="shrink-0 text-xs">
+                  {item.ordonnances.length + item.bilans.length} prescription
+                  {item.ordonnances.length + item.bilans.length > 1 ? 's' : ''}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>
+                  {item.consultation.date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
+                {item.consultation.diagnostics?.principal && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <span className="truncate">{item.consultation.diagnostics.principal.code}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Delete button for non-termine consultations */}
+            {item.consultation.statut !== 'termine' && (
+              <DeleteConsultationButton
+                consultationId={item.consultation.id}
+                onDelete={onDeleteConsultation}
+              />
+            )}
+
+            {/* Expand/collapse indicator */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewConsultation(item.consultation);
+                }}
+              >
+                Voir
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+              <ChevronDown
+                className={`h-5 w-5 text-muted-foreground transition-transform ${
+                  isOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </div>
+          </CardContent>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <div className="border-t bg-muted/30 px-4 py-2 space-y-1">
+            {item.ordonnances.map((ordonnance) => (
+              <OrdonnanceInlineItem
+                key={ordonnance.id}
+                ordonnance={ordonnance}
+                onClick={() => onViewOrdonnance(ordonnance)}
+              />
+            ))}
+            {item.bilans.map((bilan) => (
+              <BilanInlineItem key={bilan.id} bilan={bilan} onClick={() => onViewBilan(bilan)} />
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+}
+
+// ============================================================================
+// Delete Consultation Button (extracted for reuse)
+// ============================================================================
+
+function DeleteConsultationButton({
+  consultationId,
+  onDelete,
+}: {
+  consultationId: string;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(consultationId);
+    } finally {
+      setIsDeleting(false);
+      setDialogOpen(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-muted-foreground hover:text-destructive"
+          data-delete
+          onClick={(e) => {
+            e.stopPropagation();
+            setDialogOpen(true);
+          }}
+          disabled={isDeleting}
+        >
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Supprimer cette consultation ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Cette action est irréversible. La consultation sera définitivement supprimée du dossier
+            FHIR.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? 'Suppression...' : 'Supprimer'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+// ============================================================================
+// Main Timeline Component
+// ============================================================================
+
 export function PatientTimeline({ patient }: PatientTimelineProps) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useConsultations({ patientId: patient.id });
 
-  // Créer une timeline unifiée avec consultations, ordonnances et bilans
-  const timelineItems = useMemo<TimelineItem[]>(() => {
+  // State for preview dialogs
+  const [previewState, setPreviewState] = useState<PreviewState>({
+    type: null,
+    ordonnance: null,
+    bilan: null,
+  });
+
+  // Group consultations with their prescriptions
+  const consultationsWithPrescriptions = useMemo<ConsultationWithPrescriptions[]>(() => {
     if (!data?.consultations) return [];
 
-    const items: TimelineItem[] = [];
-
-    data.consultations.forEach((consultation) => {
-      // Ajouter la consultation
-      items.push({
-        id: consultation.id,
-        type: 'consultation',
-        date: new Date(consultation.date),
-        consultationId: consultation.id,
-        data: consultation,
-      });
-
-      // Ajouter les ordonnances de cette consultation
-      consultation.ordonnances?.forEach((ordonnance) => {
-        items.push({
-          id: ordonnance.id,
-          type: 'ordonnance',
-          date: new Date(ordonnance.date),
-          consultationId: consultation.id,
-          data: ordonnance,
-        });
-      });
-
-      // Ajouter les bilans de cette consultation
-      consultation.bilans?.forEach((bilan) => {
-        items.push({
-          id: bilan.id,
-          type: 'bilan',
-          date: new Date(bilan.date),
-          consultationId: consultation.id,
-          data: bilan,
-        });
-      });
-    });
-
-    // Trier par date décroissante (plus récent en premier)
-    items.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-    return items;
+    return data.consultations
+      .map((consultation) => ({
+        consultation,
+        ordonnances: consultation.ordonnances ?? [],
+        bilans: consultation.bilans ?? [],
+      }))
+      .sort((a, b) => b.consultation.date.getTime() - a.consultation.date.getTime());
   }, [data?.consultations]);
 
-  const handleNewConsultation = () => {
+  const handleNewConsultation = useCallback(() => {
     router.push(`/medecin/consultation/new?patientId=${patient.id}`);
-  };
+  }, [router, patient.id]);
 
-  const handleViewConsultation = (consultation: Consultation) => {
-    if (isConsultationEditable(consultation)) {
-      router.push(
-        `/medecin/consultation/new?consultationId=${consultation.id}&patientId=${patient.id}`
-      );
-    } else {
-      router.push(`/medecin/consultation/${consultation.id}`);
-    }
-  };
-
-  const handleViewConsultationSummary = (consultationId: string) => {
-    router.push(`/medecin/consultation/${consultationId}`);
-  };
-
-  const handleDeleteConsultation = async (consultationId: string) => {
-    const response = await fetch(`/api/consultations/${consultationId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erreur lors de la suppression');
-    }
-    await refetch();
-  };
-
-  const renderTimelineItem = (item: TimelineItem) => {
-    switch (item.type) {
-      case 'consultation':
-        return (
-          <ConsultationCard
-            key={item.id}
-            consultation={item.data as Consultation}
-            onClick={() => handleViewConsultation(item.data as Consultation)}
-            onDelete={handleDeleteConsultation}
-          />
+  const handleViewConsultation = useCallback(
+    (consultation: Consultation) => {
+      if (isConsultationEditable(consultation)) {
+        router.push(
+          `/medecin/consultation/new?consultationId=${consultation.id}&patientId=${patient.id}`
         );
-      case 'ordonnance':
-        return (
-          <OrdonnanceCard
-            key={item.id}
-            ordonnance={item.data as Ordonnance}
-            onClick={() => handleViewConsultationSummary(item.consultationId)}
-          />
-        );
-      case 'bilan':
-        return (
-          <BilanCard
-            key={item.id}
-            bilan={item.data as BilanPrescription}
-            onClick={() => handleViewConsultationSummary(item.consultationId)}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+      } else {
+        router.push(`/medecin/consultation/${consultation.id}`);
+      }
+    },
+    [router, patient.id]
+  );
+
+  const handleDeleteConsultation = useCallback(
+    async (consultationId: string) => {
+      const response = await fetch(`/api/consultations/${consultationId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de la suppression');
+      }
+      await refetch();
+    },
+    [refetch]
+  );
+
+  const handleViewOrdonnance = useCallback((ordonnance: Ordonnance) => {
+    setPreviewState({ type: 'ordonnance', ordonnance, bilan: null });
+  }, []);
+
+  const handleViewBilan = useCallback((bilan: BilanPrescription) => {
+    setPreviewState({ type: 'bilan', ordonnance: null, bilan });
+  }, []);
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewState({ type: null, ordonnance: null, bilan: null });
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -427,11 +566,22 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
         </div>
       )}
 
-      {!isLoading && !isError && timelineItems.length > 0 && (
-        <div className="space-y-3">{timelineItems.map(renderTimelineItem)}</div>
+      {!isLoading && !isError && consultationsWithPrescriptions.length > 0 && (
+        <div className="space-y-3">
+          {consultationsWithPrescriptions.map((item) => (
+            <ConsultationCardWithPrescriptions
+              key={item.consultation.id}
+              item={item}
+              onViewConsultation={handleViewConsultation}
+              onDeleteConsultation={handleDeleteConsultation}
+              onViewOrdonnance={handleViewOrdonnance}
+              onViewBilan={handleViewBilan}
+            />
+          ))}
+        </div>
       )}
 
-      {!isLoading && !isError && timelineItems.length === 0 && (
+      {!isLoading && !isError && consultationsWithPrescriptions.length === 0 && (
         <div className="rounded-lg border border-dashed">
           <EmptyState
             icon={FileText}
@@ -443,6 +593,25 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
             }}
           />
         </div>
+      )}
+
+      {/* Preview Dialogs */}
+      {previewState.type === 'ordonnance' && previewState.ordonnance && (
+        <OrdonnanceViewDialog
+          open={true}
+          onClose={handleClosePreview}
+          ordonnance={previewState.ordonnance}
+          patient={patient}
+        />
+      )}
+
+      {previewState.type === 'bilan' && previewState.bilan && (
+        <BilanViewDialog
+          open={true}
+          onClose={handleClosePreview}
+          bilan={previewState.bilan}
+          patient={patient}
+        />
       )}
     </div>
   );
