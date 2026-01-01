@@ -70,6 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           setUser(null);
+          // Supprimer le cookie de session si l'utilisateur n'est pas connecté
+          // Cela évite une boucle de redirection avec le middleware
+          fetch('/api/auth/session', { method: 'DELETE' }).catch(() => {
+            // Ignorer les erreurs silencieusement
+          });
         }
         setLoading(false);
       },
