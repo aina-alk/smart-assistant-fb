@@ -11,7 +11,9 @@ import {
   TestTube,
   Radio,
   Activity,
+  CheckCircle2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -246,21 +248,29 @@ export function BilanDialog({
   const [contexte] = useState(initialContexte);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
 
   const handleSave = useCallback(async () => {
     if (examens.length === 0) return;
 
     setIsSaving(true);
     try {
-      // Générer le contexte clinique automatiquement si non fourni
       const contexteToSave =
         contexte || examens.map((e) => `${e.code}: ${e.indication || e.libelle}`).join('\n');
       await onSave(examens, contexteToSave);
-      onClose();
+
+      setSavedCount((prev) => prev + 1);
+      setExamens([]);
+      setShowPreview(false);
+
+      toast.success('Bilan enregistré', {
+        description: 'Vous pouvez créer une autre prescription',
+        icon: <CheckCircle2 className="h-4 w-4" />,
+      });
     } finally {
       setIsSaving(false);
     }
-  }, [examens, contexte, onSave, onClose]);
+  }, [examens, contexte, onSave]);
 
   const handlePrint = () => {
     window.print();
@@ -335,6 +345,12 @@ export function BilanDialog({
           <DialogTitle className="flex items-center gap-2">
             <FileSearch className="h-5 w-5 text-primary" />
             Nouvelle prescription d&apos;examens
+            {savedCount > 0 && (
+              <Badge variant="secondary" className="ml-2 gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {savedCount} enregistré{savedCount > 1 ? 's' : ''}
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -360,7 +376,7 @@ export function BilanDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={isSaving}>
-            Annuler
+            Fermer
           </Button>
           <Button
             variant="secondary"

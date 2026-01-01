@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, forwardRef } from 'react';
-import { FileText, Printer, X, Save, Loader2, Pill } from 'lucide-react';
+import { FileText, Printer, X, Save, Loader2, Pill, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { OrdonnanceEditor } from './ordonnance-editor';
 import type { MedicamentExtrait, Ordonnance } from '@/types/ordonnance';
 import type { Patient } from '@/types/patient';
@@ -185,6 +187,7 @@ export function OrdonnanceDialog({
   const [commentaire, setCommentaire] = useState(initialCommentaire);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
 
   const handleSave = useCallback(async () => {
     if (medicaments.length === 0) return;
@@ -192,11 +195,20 @@ export function OrdonnanceDialog({
     setIsSaving(true);
     try {
       await onSave(medicaments, commentaire || undefined);
-      onClose();
+
+      setSavedCount((prev) => prev + 1);
+      setMedicaments([]);
+      setCommentaire('');
+      setShowPreview(false);
+
+      toast.success('Ordonnance enregistrée', {
+        description: 'Vous pouvez créer une autre ordonnance',
+        icon: <CheckCircle2 className="h-4 w-4" />,
+      });
     } finally {
       setIsSaving(false);
     }
-  }, [medicaments, commentaire, onSave, onClose]);
+  }, [medicaments, commentaire, onSave]);
 
   const handlePrint = () => {
     window.print();
@@ -271,6 +283,12 @@ export function OrdonnanceDialog({
           <DialogTitle className="flex items-center gap-2">
             <Pill className="h-5 w-5 text-primary" />
             Nouvelle ordonnance
+            {savedCount > 0 && (
+              <Badge variant="secondary" className="ml-2 gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {savedCount} enregistrée{savedCount > 1 ? 's' : ''}
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -308,7 +326,7 @@ export function OrdonnanceDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={isSaving}>
-            Annuler
+            Fermer
           </Button>
           <Button
             variant="secondary"
