@@ -4,6 +4,7 @@
 
 import { UserData, CallbackSlot } from '../types';
 import { config } from '../config';
+import { EMAIL_FOOTER_HTML } from './footer';
 
 function formatSlots(slots: CallbackSlot[]): string {
   const slotLabels: Record<CallbackSlot, string> = {
@@ -92,6 +93,8 @@ export function getConfirmationEmailTemplate(user: UserData) {
             <strong>L'équipe ${config.app.name}</strong>
           </p>
         </div>
+
+        ${EMAIL_FOOTER_HTML}
       </div>
     `,
   };

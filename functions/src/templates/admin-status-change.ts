@@ -4,6 +4,7 @@
 
 import { UserData, UserStatus } from '../types';
 import { config } from '../config';
+import { EMAIL_FOOTER_HTML } from './footer';
 
 const STATUS_LABELS: Record<UserStatus, string> = {
   pending_call: "En attente d'appel",
@@ -111,6 +112,8 @@ export function getAdminStatusChangeTemplate(
             Email envoyé automatiquement par le système ${config.app.name}
           </p>
         </div>
+
+        ${EMAIL_FOOTER_HTML}
       </div>
     `,
   };

@@ -4,6 +4,7 @@
 
 import { UserData } from '../types';
 import { config } from '../config';
+import { EMAIL_FOOTER_HTML } from './footer';
 
 export function getRejectionEmailTemplate(user: UserData) {
   return {
@@ -52,6 +53,8 @@ export function getRejectionEmailTemplate(user: UserData) {
             <strong>L'équipe ${config.app.name}</strong>
           </p>
         </div>
+
+        ${EMAIL_FOOTER_HTML}
       </div>
     `,
   };

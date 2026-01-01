@@ -4,6 +4,7 @@
 
 import { UserData, CallbackSlot } from '../types';
 import { config } from '../config';
+import { EMAIL_FOOTER_HTML } from './footer';
 
 function formatSlots(slots: CallbackSlot[]): string {
   const slotLabels: Record<CallbackSlot, string> = {
@@ -129,6 +130,8 @@ export function getAdminNotificationTemplate(user: UserData, userId: string) {
             Email envoyé automatiquement par le système ${config.app.name}
           </p>
         </div>
+
+        ${EMAIL_FOOTER_HTML}
       </div>
     `,
   };
