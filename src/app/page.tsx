@@ -67,12 +67,6 @@ export default function LandingPage() {
             >
               Comment ça marche
             </a>
-            <a
-              href="#pricing"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Tarifs
-            </a>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild>
@@ -328,138 +322,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <Badge variant="outline" className="mb-4">
-              Tarifs
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Un tarif adapté à votre pratique
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Commencez gratuitement, évoluez selon vos besoins
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="text-xl">Essentiel</CardTitle>
-                <CardDescription>Pour démarrer</CardDescription>
-                <div className="pt-4">
-                  <span className="text-4xl font-bold">99€</span>
-                  <span className="text-muted-foreground">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">100 consultations/mois</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Dictée vocale</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Génération CRC</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Support email</span>
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/login">Commencer</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary">Populaire</Badge>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-xl">Pro</CardTitle>
-                <CardDescription>Pour les praticiens actifs</CardDescription>
-                <div className="pt-4">
-                  <span className="text-4xl font-bold">199€</span>
-                  <span className="text-muted-foreground">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Consultations illimitées</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Codage CIM-10/CCAM/NGAP</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Ordonnances automatisées</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Support prioritaire</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Intégration agenda</span>
-                  </li>
-                </ul>
-                <Button className="w-full" asChild>
-                  <Link href="/login">Essai gratuit 14 jours</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="text-xl">Équipe</CardTitle>
-                <CardDescription>Pour les cabinets de groupe</CardDescription>
-                <div className="pt-4">
-                  <span className="text-4xl font-bold">399€</span>
-                  <span className="text-muted-foreground">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Jusqu&apos;à 5 praticiens</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Tout Pro inclus</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Dashboard équipe</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Formation personnalisée</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Support téléphonique</span>
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/login">Contacter</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
@@ -503,11 +365,6 @@ export default function LandingPage() {
                 <li>
                   <a href="#features" className="hover:text-foreground">
                     Fonctionnalités
-                  </a>
-                </li>
-                <li>
-                  <a href="#pricing" className="hover:text-foreground">
-                    Tarifs
                   </a>
                 </li>
                 <li>
