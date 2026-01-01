@@ -11,6 +11,9 @@ import {
 import { cn } from '@/lib/utils';
 import type { TacheStatut, TachePriorite, TacheCategorie } from '@/types/tache';
 
+// Value spéciale pour représenter "Toutes" (car Radix UI interdit value="")
+const ALL_VALUE = '__all__';
+
 interface TacheFiltersProps {
   statut?: TacheStatut;
   priorite?: TachePriorite;
@@ -69,14 +72,16 @@ export function TacheFilters({
       <div className="h-6 w-px bg-border hidden sm:block" />
 
       <Select
-        value={priorite || ''}
-        onValueChange={(value) => onPrioriteChange(value ? (value as TachePriorite) : undefined)}
+        value={priorite || ALL_VALUE}
+        onValueChange={(value) =>
+          onPrioriteChange(value === ALL_VALUE ? undefined : (value as TachePriorite))
+        }
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Priorité" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Toutes</SelectItem>
+          <SelectItem value={ALL_VALUE}>Toutes</SelectItem>
           {prioriteOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
@@ -86,14 +91,16 @@ export function TacheFilters({
       </Select>
 
       <Select
-        value={categorie || ''}
-        onValueChange={(value) => onCategorieChange(value ? (value as TacheCategorie) : undefined)}
+        value={categorie || ALL_VALUE}
+        onValueChange={(value) =>
+          onCategorieChange(value === ALL_VALUE ? undefined : (value as TacheCategorie))
+        }
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Catégorie" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Toutes</SelectItem>
+          <SelectItem value={ALL_VALUE}>Toutes</SelectItem>
           {categorieOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
