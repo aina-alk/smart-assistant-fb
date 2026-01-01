@@ -1,12 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Save, Loader2, Check, AlertCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Save, Loader2, Check, AlertCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { StepIndicator } from './step-indicator';
 import { PatientSelector, PatientBadge } from './patient-selector';
 import { DictationPanel } from './dictation-panel';
@@ -21,6 +32,7 @@ import {
 } from '@/lib/stores/consultation-store';
 import { useCreateConsultation } from '@/lib/hooks/use-create-consultation';
 import { useUpdateConsultation } from '@/lib/hooks/use-update-consultation';
+import { useDeleteConsultation } from '@/lib/hooks/use-delete-consultation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import type { CRCGenerated } from '@/types/generation';
 import type { DiagnosticSelection, CodageConsultation } from '@/types/codage';
@@ -297,6 +309,7 @@ function StepCodage() {
 }
 
 function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
+  const router = useRouter();
   const { user } = useAuth();
   const patient = useConsultationStore((s) => s.patient);
   const crc = useConsultationStore((s) => s.crc);
@@ -308,9 +321,14 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
   const isSaving = useConsultationStore((s) => s.isSaving);
   const setIsSaving = useConsultationStore((s) => s.setIsSaving);
   const markStepComplete = useConsultationStore((s) => s.markStepComplete);
+  const reset = useConsultationStore((s) => s.reset);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { mutateAsync: createConsultation } = useCreateConsultation();
   const { mutateAsync: updateConsultation } = useUpdateConsultation();
+  const { mutateAsync: deleteConsultationMutation } = useDeleteConsultation();
 
   const handleValidate = useCallback(async () => {
     if (!patient || !user?.uid) return;
@@ -367,6 +385,24 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
     updateConsultation,
     onComplete,
   ]);
+
+  const handleDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      if (consultationId) {
+        await deleteConsultationMutation(consultationId);
+      }
+      reset();
+      toast.success('Consultation annulée');
+      router.push('/medecin/consultation/new');
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      toast.error('Erreur lors de la suppression de la consultation');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  }, [consultationId, deleteConsultationMutation, reset, router]);
 
   const formatPrice = (price: number): string => {
     return price.toFixed(2).replace('.', ',') + ' €';
@@ -471,9 +507,25 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
         </div>
       </div>
 
-      {/* Validation Button */}
-      <div className="flex justify-end pt-4">
-        <Button size="lg" onClick={handleValidate} disabled={isSaving} className="gap-2">
+      {/* Action Buttons */}
+      <div className="flex justify-between pt-4">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={isSaving || isDeleting}
+          className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="h-5 w-5" />
+          Annuler et supprimer
+        </Button>
+
+        <Button
+          size="lg"
+          onClick={handleValidate}
+          disabled={isSaving || isDeleting}
+          className="gap-2"
+        >
           {isSaving ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -487,6 +539,35 @@ function StepValidation({ onComplete }: { onComplete?: (id: string) => void }) {
           )}
         </Button>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler cette consultation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. L&apos;enregistrement de la consultation et toutes les
+              données associées seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Retour</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Suppression...
+                </>
+              ) : (
+                'Oui, supprimer'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
