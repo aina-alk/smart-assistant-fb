@@ -5,15 +5,20 @@ import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PatientSearch, PatientList } from '@/components/patients';
+import { TacheDialog } from '@/components/taches/tache-dialog';
 import { usePatients } from '@/lib/hooks/use-patients';
 import { usePatientSearch } from '@/lib/hooks/use-patient-search';
+import { useCreateTache } from '@/lib/hooks/use-create-tache';
 import type { Patient } from '@/types';
+import type { TacheFormData } from '@/lib/validations/tache';
 
 export default function PatientsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [pageTokens, setPageTokens] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [selectedPatientForTask, setSelectedPatientForTask] = useState<Patient | null>(null);
 
   // Utiliser la recherche si query >= 2 caractères, sinon liste normale
   const isSearching = searchQuery.length >= 2;
@@ -60,6 +65,23 @@ export default function PatientsPage() {
     router.push(`/medecin/patients/${patient.id}/edit`);
   };
 
+  const handleNewConsultation = (patient: Patient) => {
+    router.push(`/medecin/consultation/new?patientId=${patient.id}`);
+  };
+
+  const handleNewTask = (patient: Patient) => {
+    setSelectedPatientForTask(patient);
+    setTaskDialogOpen(true);
+  };
+
+  const createTache = useCreateTache();
+
+  const handleTaskSubmit = async (data: TacheFormData) => {
+    await createTache.mutateAsync(data);
+    setTaskDialogOpen(false);
+    setSelectedPatientForTask(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -101,7 +123,19 @@ export default function PatientsPage() {
         onPrevPage={handlePrevPage}
         onView={handleView}
         onEdit={handleEdit}
+        onNewConsultation={handleNewConsultation}
+        onNewTask={handleNewTask}
         currentPage={currentPage}
+      />
+
+      {/* Task Dialog */}
+      <TacheDialog
+        open={taskDialogOpen}
+        onOpenChange={setTaskDialogOpen}
+        defaultPatientId={selectedPatientForTask?.id}
+        patientLocked
+        onSubmit={handleTaskSubmit}
+        isSubmitting={createTache.isPending}
       />
     </div>
   );

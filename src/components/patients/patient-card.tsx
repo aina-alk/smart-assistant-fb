@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreVertical, Eye, Pencil, Phone } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, Phone, Stethoscope, CheckSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,9 +18,17 @@ interface PatientCardProps {
   patient: Patient;
   onView?: (patient: Patient) => void;
   onEdit?: (patient: Patient) => void;
+  onNewConsultation?: (patient: Patient) => void;
+  onNewTask?: (patient: Patient) => void;
 }
 
-export function PatientCard({ patient, onView, onEdit }: PatientCardProps) {
+export function PatientCard({
+  patient,
+  onView,
+  onEdit,
+  onNewConsultation,
+  onNewTask,
+}: PatientCardProps) {
   const fullName = getPatientFullName(patient);
   const age = getPatientAge(patient);
 
@@ -56,18 +64,33 @@ export function PatientCard({ patient, onView, onEdit }: PatientCardProps) {
               </div>
             )}
           </div>
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+              onClick={() => onNewConsultation?.(patient)}
+            >
+              <Stethoscope className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-orange-600 hover:text-orange-600 hover:bg-orange-100"
+              onClick={() => onNewTask?.(patient)}
+            >
+              <CheckSquare className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Actions</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onView?.(patient)}>
                   <Eye className="mr-2 h-4 w-4" />
-                  Voir
+                  Voir le dossier
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit?.(patient)}>
                   <Pencil className="mr-2 h-4 w-4" />

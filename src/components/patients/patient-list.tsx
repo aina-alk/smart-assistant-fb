@@ -1,6 +1,15 @@
 'use client';
 
-import { MoreVertical, Eye, Pencil, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import {
+  MoreVertical,
+  Eye,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Stethoscope,
+  CheckSquare,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -33,6 +42,8 @@ interface PatientListProps {
   onPrevPage?: () => void;
   onView?: (patient: Patient) => void;
   onEdit?: (patient: Patient) => void;
+  onNewConsultation?: (patient: Patient) => void;
+  onNewTask?: (patient: Patient) => void;
   currentPage?: number;
 }
 
@@ -46,6 +57,8 @@ export function PatientList({
   onPrevPage,
   onView,
   onEdit,
+  onNewConsultation,
+  onNewTask,
   currentPage = 1,
 }: PatientListProps) {
   const formatDate = (date: Date) => {
@@ -105,24 +118,46 @@ export function PatientList({
                   </TableCell>
                   <TableCell className="text-muted-foreground">-</TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onView?.(patient)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Voir
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit?.(patient)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Modifier
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => onNewConsultation?.(patient)}
+                        title="Nouvelle consultation"
+                      >
+                        <Stethoscope className="h-4 w-4" />
+                        <span className="sr-only">Nouvelle consultation</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-orange-600 hover:text-orange-600 hover:bg-orange-100"
+                        onClick={() => onNewTask?.(patient)}
+                        title="Nouvelle tâche"
+                      >
+                        <CheckSquare className="h-4 w-4" />
+                        <span className="sr-only">Nouvelle tâche</span>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Plus d&apos;actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onView?.(patient)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Voir le dossier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onEdit?.(patient)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -134,7 +169,14 @@ export function PatientList({
       {/* Mobile: Cards */}
       <div className="grid gap-3 md:hidden">
         {patients.map((patient) => (
-          <PatientCard key={patient.id} patient={patient} onView={onView} onEdit={onEdit} />
+          <PatientCard
+            key={patient.id}
+            patient={patient}
+            onView={onView}
+            onEdit={onEdit}
+            onNewConsultation={onNewConsultation}
+            onNewTask={onNewTask}
+          />
         ))}
       </div>
 
