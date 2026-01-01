@@ -20,9 +20,9 @@ export function PatientHeader({ patient, onEdit }: PatientHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/patients')}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/medecin')}>
           <ArrowLeft className="h-4 w-4" />
-          <span className="sr-only">Retour aux patients</span>
+          <span className="sr-only">Retour à l&apos;accueil</span>
         </Button>
         <div>
           <div className="flex items-center gap-2">
