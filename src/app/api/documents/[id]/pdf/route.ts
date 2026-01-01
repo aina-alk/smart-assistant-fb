@@ -28,8 +28,7 @@ const crcDataSchema = z.object({
     motif: z.string(),
     histoire: z.string(),
     examen: z.object({
-      otoscopie_droite: z.string().nullable(),
-      otoscopie_gauche: z.string().nullable(),
+      otoscopie: z.string().nullable(),
       rhinoscopie: z.string().nullable(),
       oropharynx: z.string().nullable(),
       palpation_cervicale: z.string().nullable(),
