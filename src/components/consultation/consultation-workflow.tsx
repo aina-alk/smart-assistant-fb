@@ -2,7 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Save, Loader2, Check, AlertCircle, Trash2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  Loader2,
+  Check,
+  AlertCircle,
+  Trash2,
+  FileText,
+  Pill,
+  TestTube,
+  ChevronDown,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +30,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { OrdonnanceDialog } from '@/components/ordonnance/ordonnance-dialog';
+import { BilanDialog } from '@/components/bilan/bilan-dialog';
 import { StepIndicator } from './step-indicator';
 import { PatientSelector, PatientBadge } from './patient-selector';
 import { DictationPanel } from './dictation-panel';
@@ -588,8 +608,56 @@ export function ConsultationWorkflow({
   const isSaving = useConsultationStore((s) => s.isSaving);
   const hasUnsavedChanges = useConsultationStore((s) => s.hasUnsavedChanges);
   const lastSavedAt = useConsultationStore((s) => s.lastSavedAt);
+  const patient = useConsultationStore((s) => s.patient);
+  const crc = useConsultationStore((s) => s.crc);
+  const consultationId = useConsultationStore((s) => s.consultationId);
+  const diagnostics = useConsultationStore((s) => s.diagnostics);
+
+  // Dialog states for prescriptions
+  const [showOrdonnanceDialog, setShowOrdonnanceDialog] = useState(false);
+  const [showBilanDialog, setShowBilanDialog] = useState(false);
 
   const { save } = useAutoSave();
+
+  // Praticien info (simplified for now)
+  const praticien = {
+    nom: 'Dr. Praticien',
+    specialite: 'ORL',
+  };
+
+  // Handle ordonnance save
+  const handleOrdonnanceSave = useCallback(
+    async (
+      _medicaments: Parameters<typeof OrdonnanceDialog>[0]['onSave'] extends (
+        m: infer M,
+        c?: string
+      ) => Promise<void>
+        ? M
+        : never,
+      _commentaire?: string
+    ) => {
+      // TODO: Save to FHIR MedicationRequest in a future version
+      toast.success('Ordonnance enregistrée');
+    },
+    []
+  );
+
+  // Handle bilan save
+  const handleBilanSave = useCallback(
+    async (
+      _examens: Parameters<typeof BilanDialog>[0]['onSave'] extends (
+        e: infer E,
+        c: string
+      ) => Promise<void>
+        ? E
+        : never,
+      _contexte_clinique: string
+    ) => {
+      // TODO: Save to FHIR ServiceRequest in a future version
+      toast.success('Bilan enregistré');
+    },
+    []
+  );
 
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const isFirstStep = currentIndex === 0;
@@ -659,12 +727,58 @@ export function ConsultationWorkflow({
             {isFirstStep ? 'Retour' : STEP_LABELS[STEP_ORDER[currentIndex - 1]]}
           </Button>
 
+          {/* Prescriptions dropdown - visible when patient is selected */}
+          {patient && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  Prescriptions
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuItem onClick={() => setShowOrdonnanceDialog(true)}>
+                  <Pill className="h-4 w-4 mr-2" />
+                  Ordonnance
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowBilanDialog(true)}>
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Bilan / Examens
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button onClick={nextStep} disabled={!canGoNext} className="gap-2">
             {nextStepKey ? STEP_LABELS[nextStepKey] : 'Suivant'}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}
+
+      {/* Ordonnance Dialog */}
+      <OrdonnanceDialog
+        open={showOrdonnanceDialog}
+        onClose={() => setShowOrdonnanceDialog(false)}
+        onSave={handleOrdonnanceSave}
+        consultationId={consultationId || 'new'}
+        patient={patient}
+        praticien={praticien}
+        conduite={crc?.conduite}
+      />
+
+      {/* Bilan Dialog */}
+      <BilanDialog
+        open={showBilanDialog}
+        onClose={() => setShowBilanDialog(false)}
+        onSave={handleBilanSave}
+        consultationId={consultationId || 'new'}
+        patient={patient}
+        praticien={praticien}
+        crc={crc ? `${crc.motif}\n\n${crc.histoire}\n\n${crc.diagnostic}` : undefined}
+        diagnostic={diagnostics?.principal?.libelle}
+      />
     </div>
   );
 }

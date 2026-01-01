@@ -601,3 +601,187 @@ export interface DiagnosticReportMedia {
   comment?: string;
   link: Reference;
 }
+
+/**
+ * MedicationRequest Resource (Ordonnance)
+ * Prescription de médicaments
+ */
+export interface MedicationRequest extends FHIRResource {
+  resourceType: 'MedicationRequest';
+  identifier?: Identifier[];
+  status:
+    | 'active'
+    | 'on-hold'
+    | 'cancelled'
+    | 'completed'
+    | 'entered-in-error'
+    | 'stopped'
+    | 'draft'
+    | 'unknown';
+  statusReason?: CodeableConcept;
+  intent:
+    | 'proposal'
+    | 'plan'
+    | 'order'
+    | 'original-order'
+    | 'reflex-order'
+    | 'filler-order'
+    | 'instance-order'
+    | 'option';
+  category?: CodeableConcept[];
+  priority?: 'routine' | 'urgent' | 'asap' | 'stat';
+  doNotPerform?: boolean;
+  reportedBoolean?: boolean;
+  reportedReference?: Reference;
+  medicationCodeableConcept?: CodeableConcept;
+  medicationReference?: Reference;
+  subject: Reference;
+  encounter?: Reference;
+  supportingInformation?: Reference[];
+  authoredOn?: string;
+  requester?: Reference;
+  performer?: Reference;
+  performerType?: CodeableConcept;
+  recorder?: Reference;
+  reasonCode?: CodeableConcept[];
+  reasonReference?: Reference[];
+  instantiatesCanonical?: string[];
+  instantiatesUri?: string[];
+  basedOn?: Reference[];
+  groupIdentifier?: Identifier;
+  courseOfTherapyType?: CodeableConcept;
+  insurance?: Reference[];
+  note?: Annotation[];
+  dosageInstruction?: Dosage[];
+  dispenseRequest?: MedicationRequestDispenseRequest;
+  substitution?: MedicationRequestSubstitution;
+  priorPrescription?: Reference;
+  detectedIssue?: Reference[];
+  eventHistory?: Reference[];
+}
+
+export interface Dosage {
+  sequence?: number;
+  text?: string;
+  additionalInstruction?: CodeableConcept[];
+  patientInstruction?: string;
+  timing?: Timing;
+  asNeededBoolean?: boolean;
+  asNeededCodeableConcept?: CodeableConcept;
+  site?: CodeableConcept;
+  route?: CodeableConcept;
+  method?: CodeableConcept;
+  doseAndRate?: DosageDoseAndRate[];
+  maxDosePerPeriod?: Ratio;
+  maxDosePerAdministration?: Quantity;
+  maxDosePerLifetime?: Quantity;
+}
+
+export interface DosageDoseAndRate {
+  type?: CodeableConcept;
+  doseRange?: Range;
+  doseQuantity?: Quantity;
+  rateRatio?: Ratio;
+  rateRange?: Range;
+  rateQuantity?: Quantity;
+}
+
+export interface Timing {
+  event?: string[];
+  repeat?: TimingRepeat;
+  code?: CodeableConcept;
+}
+
+export interface TimingRepeat {
+  boundsDuration?: Quantity;
+  boundsRange?: Range;
+  boundsPeriod?: Period;
+  count?: number;
+  countMax?: number;
+  duration?: number;
+  durationMax?: number;
+  durationUnit?: 's' | 'min' | 'h' | 'd' | 'wk' | 'mo' | 'a';
+  frequency?: number;
+  frequencyMax?: number;
+  period?: number;
+  periodMax?: number;
+  periodUnit?: 's' | 'min' | 'h' | 'd' | 'wk' | 'mo' | 'a';
+  dayOfWeek?: ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun')[];
+  timeOfDay?: string[];
+  when?: string[];
+  offset?: number;
+}
+
+export interface MedicationRequestDispenseRequest {
+  initialFill?: {
+    quantity?: Quantity;
+    duration?: Quantity;
+  };
+  dispenseInterval?: Quantity;
+  validityPeriod?: Period;
+  numberOfRepeatsAllowed?: number;
+  quantity?: Quantity;
+  expectedSupplyDuration?: Quantity;
+  performer?: Reference;
+}
+
+export interface MedicationRequestSubstitution {
+  allowedBoolean?: boolean;
+  allowedCodeableConcept?: CodeableConcept;
+  reason?: CodeableConcept;
+}
+
+/**
+ * ServiceRequest Resource (Prescription d'examens/bilans)
+ * Demande d'examen, imagerie, biologie, etc.
+ */
+export interface ServiceRequest extends FHIRResource {
+  resourceType: 'ServiceRequest';
+  identifier?: Identifier[];
+  instantiatesCanonical?: string[];
+  instantiatesUri?: string[];
+  basedOn?: Reference[];
+  replaces?: Reference[];
+  requisition?: Identifier;
+  status: 'draft' | 'active' | 'on-hold' | 'revoked' | 'completed' | 'entered-in-error' | 'unknown';
+  intent:
+    | 'proposal'
+    | 'plan'
+    | 'directive'
+    | 'order'
+    | 'original-order'
+    | 'reflex-order'
+    | 'filler-order'
+    | 'instance-order'
+    | 'option';
+  category?: CodeableConcept[];
+  priority?: 'routine' | 'urgent' | 'asap' | 'stat';
+  doNotPerform?: boolean;
+  code?: CodeableConcept;
+  orderDetail?: CodeableConcept[];
+  quantityQuantity?: Quantity;
+  quantityRatio?: Ratio;
+  quantityRange?: Range;
+  subject: Reference;
+  encounter?: Reference;
+  occurrenceDateTime?: string;
+  occurrencePeriod?: Period;
+  occurrenceTiming?: Timing;
+  asNeededBoolean?: boolean;
+  asNeededCodeableConcept?: CodeableConcept;
+  authoredOn?: string;
+  requester?: Reference;
+  performerType?: CodeableConcept;
+  performer?: Reference[];
+  locationCode?: CodeableConcept[];
+  locationReference?: Reference[];
+  reasonCode?: CodeableConcept[];
+  reasonReference?: Reference[];
+  insurance?: Reference[];
+  supportingInfo?: Reference[];
+  specimen?: Reference[];
+  bodySite?: CodeableConcept[];
+  note?: Annotation[];
+  patientInstruction?: string;
+  relevantHistory?: Reference[];
+}
