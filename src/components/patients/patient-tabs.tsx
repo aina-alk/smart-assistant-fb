@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PatientTimeline } from './patient-timeline';
@@ -15,7 +16,22 @@ interface PatientTabsProps {
 export function PatientTabs({ patient }: PatientTabsProps) {
   const { data: consultationsData } = useConsultations({ patientId: patient.id });
   const { data: tachesData } = useTaches({ patientId: patient.id });
-  const consultationsCount = consultationsData?.total ?? 0;
+
+  // Calculer le nombre total d'éléments dans la timeline
+  // (consultations + ordonnances + bilans)
+  const timelineItemsCount = useMemo(() => {
+    if (!consultationsData?.consultations) return 0;
+
+    let count = consultationsData.consultations.length;
+
+    consultationsData.consultations.forEach((consultation) => {
+      count += consultation.ordonnances?.length ?? 0;
+      count += consultation.bilans?.length ?? 0;
+    });
+
+    return count;
+  }, [consultationsData?.consultations]);
+
   const activeTachesCount =
     tachesData?.taches?.filter((t) => t.statut !== 'terminee' && t.statut !== 'annulee').length ??
     0;
@@ -26,7 +42,7 @@ export function PatientTabs({ patient }: PatientTabsProps) {
         <TabsTrigger value="timeline" className="flex items-center gap-2">
           Timeline
           <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-            {consultationsCount}
+            {timelineItemsCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="tasks" className="flex items-center gap-2">

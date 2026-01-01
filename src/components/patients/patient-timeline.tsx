@@ -1,8 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, FileText, Calendar, Stethoscope, ChevronRight, Trash2, Loader2 } from 'lucide-react';
+import {
+  Plus,
+  FileText,
+  Calendar,
+  Stethoscope,
+  ChevronRight,
+  Trash2,
+  Loader2,
+  Pill,
+  TestTube,
+  AlertTriangle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +32,22 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useConsultations } from '@/lib/hooks/use-consultations';
 import type { Patient, Consultation, ConsultationStatut } from '@/types';
+import type { Ordonnance } from '@/types/ordonnance';
+import type { BilanPrescription } from '@/types/bilan';
+
+// ============================================================================
+// Types pour la timeline unifiée
+// ============================================================================
+
+type TimelineItemType = 'consultation' | 'ordonnance' | 'bilan';
+
+interface TimelineItem {
+  id: string;
+  type: TimelineItemType;
+  date: Date;
+  consultationId: string;
+  data: Consultation | Ordonnance | BilanPrescription;
+}
 
 interface PatientTimelineProps {
   patient: Patient;
@@ -139,6 +166,116 @@ function ConsultationCard({
   );
 }
 
+// ============================================================================
+// Ordonnance Card
+// ============================================================================
+
+function OrdonnanceCard({ ordonnance, onClick }: { ordonnance: Ordonnance; onClick: () => void }) {
+  const dateFormatted = new Date(ordonnance.date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const medicamentCount = ordonnance.medicaments.length;
+
+  return (
+    <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={onClick}>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+          <Pill className="h-5 w-5 text-emerald-600" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium truncate">Ordonnance</p>
+            <Badge variant="outline" className="shrink-0 text-emerald-700 border-emerald-300">
+              {medicamentCount} médicament{medicamentCount > 1 ? 's' : ''}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{dateFormatted}</span>
+            {ordonnance.medicaments.length > 0 && (
+              <>
+                <span className="mx-1">•</span>
+                <span className="truncate">{ordonnance.medicaments[0].nom}</span>
+                {ordonnance.medicaments.length > 1 && (
+                  <span className="text-muted-foreground">
+                    {' '}
+                    +{ordonnance.medicaments.length - 1}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// Bilan Card
+// ============================================================================
+
+function BilanCard({ bilan, onClick }: { bilan: BilanPrescription; onClick: () => void }) {
+  const dateFormatted = new Date(bilan.date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const examenCount = bilan.examens.length;
+  const hasUrgent = bilan.examens.some((e) => e.urgent);
+
+  return (
+    <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={onClick}>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+          <TestTube className="h-5 w-5 text-blue-600" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium truncate">Bilan / Examens</p>
+            <Badge variant="outline" className="shrink-0 text-blue-700 border-blue-300">
+              {examenCount} examen{examenCount > 1 ? 's' : ''}
+            </Badge>
+            {hasUrgent && (
+              <Badge variant="destructive" className="shrink-0 gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Urgent
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{dateFormatted}</span>
+            {bilan.examens.length > 0 && (
+              <>
+                <span className="mx-1">•</span>
+                <span className="truncate">{bilan.examens[0].code}</span>
+                {bilan.examens.length > 1 && (
+                  <span className="text-muted-foreground"> +{bilan.examens.length - 1}</span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================================
+// Timeline Skeleton
+// ============================================================================
+
 function TimelineSkeleton() {
   return (
     <div className="space-y-3">
@@ -161,6 +298,51 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useConsultations({ patientId: patient.id });
 
+  // Créer une timeline unifiée avec consultations, ordonnances et bilans
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    if (!data?.consultations) return [];
+
+    const items: TimelineItem[] = [];
+
+    data.consultations.forEach((consultation) => {
+      // Ajouter la consultation
+      items.push({
+        id: consultation.id,
+        type: 'consultation',
+        date: new Date(consultation.date),
+        consultationId: consultation.id,
+        data: consultation,
+      });
+
+      // Ajouter les ordonnances de cette consultation
+      consultation.ordonnances?.forEach((ordonnance) => {
+        items.push({
+          id: ordonnance.id,
+          type: 'ordonnance',
+          date: new Date(ordonnance.date),
+          consultationId: consultation.id,
+          data: ordonnance,
+        });
+      });
+
+      // Ajouter les bilans de cette consultation
+      consultation.bilans?.forEach((bilan) => {
+        items.push({
+          id: bilan.id,
+          type: 'bilan',
+          date: new Date(bilan.date),
+          consultationId: consultation.id,
+          data: bilan,
+        });
+      });
+    });
+
+    // Trier par date décroissante (plus récent en premier)
+    items.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    return items;
+  }, [data?.consultations]);
+
   const handleNewConsultation = () => {
     router.push(`/medecin/consultation/new?patientId=${patient.id}`);
   };
@@ -178,6 +360,38 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
       throw new Error(error.error || 'Erreur lors de la suppression');
     }
     await refetch();
+  };
+
+  const renderTimelineItem = (item: TimelineItem) => {
+    switch (item.type) {
+      case 'consultation':
+        return (
+          <ConsultationCard
+            key={item.id}
+            consultation={item.data as Consultation}
+            onClick={() => handleViewConsultation(item.consultationId)}
+            onDelete={handleDeleteConsultation}
+          />
+        );
+      case 'ordonnance':
+        return (
+          <OrdonnanceCard
+            key={item.id}
+            ordonnance={item.data as Ordonnance}
+            onClick={() => handleViewConsultation(item.consultationId)}
+          />
+        );
+      case 'bilan':
+        return (
+          <BilanCard
+            key={item.id}
+            bilan={item.data as BilanPrescription}
+            onClick={() => handleViewConsultation(item.consultationId)}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -198,20 +412,11 @@ export function PatientTimeline({ patient }: PatientTimelineProps) {
         </div>
       )}
 
-      {!isLoading && !isError && data?.consultations && data.consultations.length > 0 && (
-        <div className="space-y-3">
-          {data.consultations.map((consultation) => (
-            <ConsultationCard
-              key={consultation.id}
-              consultation={consultation}
-              onClick={() => handleViewConsultation(consultation.id)}
-              onDelete={handleDeleteConsultation}
-            />
-          ))}
-        </div>
+      {!isLoading && !isError && timelineItems.length > 0 && (
+        <div className="space-y-3">{timelineItems.map(renderTimelineItem)}</div>
       )}
 
-      {!isLoading && !isError && (!data?.consultations || data.consultations.length === 0) && (
+      {!isLoading && !isError && timelineItems.length === 0 && (
         <div className="rounded-lg border border-dashed">
           <EmptyState
             icon={FileText}
