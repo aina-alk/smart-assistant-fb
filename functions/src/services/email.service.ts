@@ -7,8 +7,10 @@ import { config, getResendApiKey } from '../config';
 import { UserData } from '../types';
 import { getConfirmationEmailTemplate } from '../templates/confirmation';
 import { getAdminNotificationTemplate } from '../templates/admin-notification';
+import { getAdminStatusChangeTemplate } from '../templates/admin-status-change';
 import { getWelcomeEmailTemplate } from '../templates/welcome';
 import { getRejectionEmailTemplate } from '../templates/rejection';
+import { UserStatus } from '../types';
 
 let resendClient: Resend | null = null;
 
@@ -120,6 +122,39 @@ export async function sendRejectionEmail(user: UserData): Promise<void> {
     console.warn(`Email de refus envoyé à ${user.email}`);
   } catch (error) {
     console.error('Erreur envoi email refus:', error);
+    throw error;
+  }
+}
+
+/**
+ * Envoie une notification à l'admin pour un changement de statut
+ */
+export async function sendAdminStatusChangeNotification(
+  user: UserData,
+  userId: string,
+  oldStatus: UserStatus,
+  newStatus: UserStatus,
+  performedBy?: string
+): Promise<void> {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn(
+      `[SKIP] Notification admin changement statut pour ${user.email} - Resend non configuré`
+    );
+    return;
+  }
+  const template = getAdminStatusChangeTemplate(user, userId, oldStatus, newStatus, performedBy);
+
+  try {
+    await resend.emails.send({
+      from: config.resend.fromEmail,
+      to: config.resend.adminEmail,
+      subject: template.subject,
+      html: template.html,
+    });
+    console.warn(`Notification admin envoyée: ${user.email} ${oldStatus} → ${newStatus}`);
+  } catch (error) {
+    console.error('Erreur envoi notification admin changement statut:', error);
     throw error;
   }
 }

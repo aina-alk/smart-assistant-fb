@@ -11,7 +11,7 @@ export const getResendApiKey = (): string | null => {
 export const config = {
   resend: {
     fromEmail: 'Super Assistant Médical <contact@superassistant.fr>',
-    adminEmail: process.env.ADMIN_EMAIL || 'admin@superassistant.fr',
+    adminEmail: process.env.ADMIN_EMAIL || 'support@selav.fr',
   },
   app: {
     name: 'Super Assistant Médical',

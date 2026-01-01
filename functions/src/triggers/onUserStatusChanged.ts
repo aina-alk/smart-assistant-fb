@@ -6,7 +6,11 @@
 import * as functions from 'firebase-functions';
 import { getAuth } from 'firebase-admin/auth';
 import { UserData, UserStatus } from '../types';
-import { sendWelcomeEmail, sendRejectionEmail } from '../services/email.service';
+import {
+  sendWelcomeEmail,
+  sendRejectionEmail,
+  sendAdminStatusChangeNotification,
+} from '../services/email.service';
 import { createAuditLog } from '../services/audit.service';
 
 export const onUserStatusChanged = functions
@@ -36,8 +40,17 @@ export const onUserStatusChanged = functions
       });
       console.warn(`Custom Claims mis à jour pour ${userId}`);
 
-      // Actions selon le nouveau statut
+      // Actions selon le nouveau statut (emails à l'utilisateur)
       await handleStatusChange(userId, afterData, oldStatus, newStatus);
+
+      // Notifier l'admin du changement de statut
+      await sendAdminStatusChangeNotification(
+        afterData,
+        userId,
+        oldStatus,
+        newStatus,
+        afterData.updatedBy || undefined
+      );
 
       // Logger dans l'audit
       await createAuditLog({
