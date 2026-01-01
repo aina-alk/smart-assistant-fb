@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PatientTimeline } from './patient-timeline';
+import { useConsultations } from '@/lib/hooks/use-consultations';
 import type { Patient } from '@/types';
 
 interface PatientTabsProps {
@@ -10,13 +11,16 @@ interface PatientTabsProps {
 }
 
 export function PatientTabs({ patient }: PatientTabsProps) {
+  const { data: consultationsData } = useConsultations({ patientId: patient.id });
+  const consultationsCount = consultationsData?.total ?? 0;
+
   return (
     <Tabs defaultValue="timeline" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="timeline" className="flex items-center gap-2">
           Timeline
           <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-            0
+            {consultationsCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="tasks" className="flex items-center gap-2">

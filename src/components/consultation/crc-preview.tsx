@@ -35,8 +35,7 @@ export interface CRCPreviewDialogProps extends CRCPreviewProps {
 // ============================================================================
 
 const EXAMEN_LABELS: Record<keyof CRCExamen, string> = {
-  otoscopie_droite: 'Otoscopie droite',
-  otoscopie_gauche: 'Otoscopie gauche',
+  otoscopie: 'Otoscopie',
   rhinoscopie: 'Rhinoscopie',
   oropharynx: 'Oropharynx',
   palpation_cervicale: 'Palpation cervicale',
