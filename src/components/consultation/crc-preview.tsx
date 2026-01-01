@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { FileText, Stethoscope, Printer, X } from 'lucide-react';
+import { FileText, Stethoscope, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -220,15 +220,10 @@ export function CRCPreviewDialog({
               <FileText className="h-5 w-5" />
               Aperçu du Compte-Rendu
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimer
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimer
+            </Button>
           </div>
         </DialogHeader>
 

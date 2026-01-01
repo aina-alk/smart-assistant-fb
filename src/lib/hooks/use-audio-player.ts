@@ -21,21 +21,25 @@ export function useAudioPlayer() {
     audio.src = url;
     audioRef.current = audio;
 
+    const handleCanPlay = () => {
+      // Audio is ready to play - use canplay event instead of loadedmetadata
+      // because blob audio (WebM) often reports Infinity duration until buffered
+      setIsReady(true);
+    };
+
     const handleLoadedMetadata = () => {
-      // Guard against non-finite duration (can happen with some blob URLs)
+      // Update duration if finite (may not be for blob audio)
       const duration = audio.duration;
       if (Number.isFinite(duration) && duration > 0) {
         setDuration(duration);
-        setIsReady(true);
       }
     };
 
-    // Fallback: use durationchange event for blobs that don't report duration immediately
     const handleDurationChange = () => {
+      // Fallback: update duration when it becomes available
       const duration = audio.duration;
       if (Number.isFinite(duration) && duration > 0) {
         setDuration(duration);
-        setIsReady(true);
       }
     };
 
@@ -48,12 +52,14 @@ export function useAudioPlayer() {
       setCurrentTime(0);
     };
 
+    audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
