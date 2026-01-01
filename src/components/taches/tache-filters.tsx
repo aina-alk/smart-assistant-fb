@@ -14,13 +14,21 @@ import type { TacheStatut, TachePriorite, TacheCategorie } from '@/types/tache';
 // Value spéciale pour représenter "Toutes" (car Radix UI interdit value="")
 const ALL_VALUE = '__all__';
 
+interface PatientOption {
+  id: string;
+  name: string;
+}
+
 interface TacheFiltersProps {
   statut?: TacheStatut;
   priorite?: TachePriorite;
   categorie?: TacheCategorie;
+  patientId?: string;
+  patients?: PatientOption[];
   onStatutChange: (statut: TacheStatut | undefined) => void;
   onPrioriteChange: (priorite: TachePriorite | undefined) => void;
   onCategorieChange: (categorie: TacheCategorie | undefined) => void;
+  onPatientChange?: (patientId: string | undefined) => void;
 }
 
 const statutOptions: { value: TacheStatut; label: string }[] = [
@@ -49,9 +57,12 @@ export function TacheFilters({
   statut,
   priorite,
   categorie,
+  patientId,
+  patients,
   onStatutChange,
   onPrioriteChange,
   onCategorieChange,
+  onPatientChange,
 }: TacheFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -108,6 +119,25 @@ export function TacheFilters({
           ))}
         </SelectContent>
       </Select>
+
+      {patients && patients.length > 0 && onPatientChange && (
+        <Select
+          value={patientId || ALL_VALUE}
+          onValueChange={(value) => onPatientChange(value === ALL_VALUE ? undefined : value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Patient" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>Tous les patients</SelectItem>
+            {patients.map((patient) => (
+              <SelectItem key={patient.id} value={patient.id}>
+                {patient.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

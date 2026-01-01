@@ -21,11 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PatientSearchField } from './patient-search-field';
 import { tacheFormSchema, type TacheFormData } from '@/lib/validations/tache';
 import type { Tache } from '@/types/tache';
 
 interface TacheFormProps {
   defaultValues?: Partial<Tache>;
+  defaultPatientId?: string;
+  patientLocked?: boolean;
   onSubmit: (data: TacheFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -34,6 +37,8 @@ interface TacheFormProps {
 
 export function TacheForm({
   defaultValues,
+  defaultPatientId,
+  patientLocked = false,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -49,7 +54,7 @@ export function TacheForm({
       categorie: defaultValues?.categorie || 'autre',
       echeance: defaultValues?.echeance,
       rappel: defaultValues?.rappel,
-      patientId: defaultValues?.patientId,
+      patientId: defaultPatientId || defaultValues?.patientId,
       consultationId: defaultValues?.consultationId,
     },
   });
@@ -61,6 +66,25 @@ export function TacheForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="patientId"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel>Patient *</FormLabel>
+              <FormControl>
+                <PatientSearchField
+                  value={field.value}
+                  onChange={(patientId) => field.onChange(patientId)}
+                  disabled={patientLocked}
+                  error={fieldState.error?.message}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="titre"

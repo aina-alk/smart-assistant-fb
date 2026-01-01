@@ -1,25 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TacheList } from '@/components/taches/tache-list';
 import { TacheFilters } from '@/components/taches/tache-filters';
-import { TacheQuickAdd } from '@/components/taches/tache-quick-add';
 import { TacheDialog } from '@/components/taches/tache-dialog';
 import { useTaches } from '@/lib/hooks/use-taches';
+import { usePatients } from '@/lib/hooks/use-patients';
 import { useCreateTache } from '@/lib/hooks/use-create-tache';
 import { useUpdateTache } from '@/lib/hooks/use-update-tache';
 import { useCompleteTache } from '@/lib/hooks/use-complete-tache';
 import { useDeleteTache } from '@/lib/hooks/use-delete-tache';
+import { getPatientFullName } from '@/types/patient';
 import type { Tache, TacheStatut, TachePriorite, TacheCategorie } from '@/types/tache';
 import type { TacheFormData } from '@/lib/validations/tache';
 
 export default function TasksPage() {
+  const router = useRouter();
   const [statutFilter, setStatutFilter] = useState<TacheStatut>();
   const [prioriteFilter, setPrioriteFilter] = useState<TachePriorite>();
   const [categorieFilter, setCategorieFilter] = useState<TacheCategorie>();
+  const [patientFilter, setPatientFilter] = useState<string>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTache, setEditingTache] = useState<Tache>();
 
@@ -27,7 +31,10 @@ export default function TasksPage() {
     statut: statutFilter,
     priorite: prioriteFilter,
     categorie: categorieFilter,
+    patientId: patientFilter,
   });
+
+  const { data: patientsData } = usePatients({ limit: 100 });
 
   const createTache = useCreateTache();
   const updateTache = useUpdateTache();
@@ -36,20 +43,30 @@ export default function TasksPage() {
 
   const taches = data?.taches || [];
 
+  // Map patient ID -> nom complet pour affichage
+  const patientsMap = useMemo(() => {
+    const map = new Map<string, string>();
+    patientsData?.patients.forEach((p) => {
+      map.set(p.id, getPatientFullName(p));
+    });
+    return map;
+  }, [patientsData?.patients]);
+
+  // Liste des patients pour le filtre
+  const patientOptions = useMemo(() => {
+    return (
+      patientsData?.patients.map((p) => ({
+        id: p.id,
+        name: getPatientFullName(p),
+      })) || []
+    );
+  }, [patientsData?.patients]);
+
   // Statistiques rapides
   const stats = {
     aFaire: taches.filter((t) => t.statut === 'a_faire').length,
     enCours: taches.filter((t) => t.statut === 'en_cours').length,
     terminees: taches.filter((t) => t.statut === 'terminee').length,
-  };
-
-  const handleQuickAdd = async (titre: string) => {
-    await createTache.mutateAsync({
-      titre,
-      priorite: 'normale',
-      statut: 'a_faire',
-      categorie: 'autre',
-    });
   };
 
   const handleCreate = () => {
@@ -125,26 +142,28 @@ export default function TasksPage() {
         </Card>
       </div>
 
-      {/* Quick Add */}
-      <TacheQuickAdd onAdd={handleQuickAdd} isLoading={createTache.isPending} />
-
       {/* Filters */}
       <TacheFilters
         statut={statutFilter}
         priorite={prioriteFilter}
         categorie={categorieFilter}
+        patientId={patientFilter}
+        patients={patientOptions}
         onStatutChange={setStatutFilter}
         onPrioriteChange={setPrioriteFilter}
         onCategorieChange={setCategorieFilter}
+        onPatientChange={setPatientFilter}
       />
 
       {/* List */}
       <TacheList
         taches={taches}
+        patientsMap={patientsMap}
         isLoading={isLoading}
         onComplete={handleComplete}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onPatientClick={(patientId) => router.push(`/medecin/patients/${patientId}`)}
       />
 
       {/* Dialog */}

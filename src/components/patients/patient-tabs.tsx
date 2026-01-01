@@ -3,7 +3,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PatientTimeline } from './patient-timeline';
+import { PatientTasks } from './patient-tasks';
 import { useConsultations } from '@/lib/hooks/use-consultations';
+import { useTaches } from '@/lib/hooks/use-taches';
 import type { Patient } from '@/types';
 
 interface PatientTabsProps {
@@ -12,7 +14,11 @@ interface PatientTabsProps {
 
 export function PatientTabs({ patient }: PatientTabsProps) {
   const { data: consultationsData } = useConsultations({ patientId: patient.id });
+  const { data: tachesData } = useTaches({ patientId: patient.id });
   const consultationsCount = consultationsData?.total ?? 0;
+  const activeTachesCount =
+    tachesData?.taches?.filter((t) => t.statut !== 'terminee' && t.statut !== 'annulee').length ??
+    0;
 
   return (
     <Tabs defaultValue="timeline" className="w-full">
@@ -26,7 +32,7 @@ export function PatientTabs({ patient }: PatientTabsProps) {
         <TabsTrigger value="tasks" className="flex items-center gap-2">
           Tâches
           <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-            0
+            {activeTachesCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="documents" className="flex items-center gap-2">
@@ -42,12 +48,7 @@ export function PatientTabs({ patient }: PatientTabsProps) {
       </TabsContent>
 
       <TabsContent value="tasks" className="mt-6">
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-          <p className="text-lg font-medium text-muted-foreground">Bientôt disponible</p>
-          <p className="text-sm text-muted-foreground">
-            La gestion des tâches sera disponible dans une prochaine version.
-          </p>
-        </div>
+        <PatientTasks patient={patient} />
       </TabsContent>
 
       <TabsContent value="documents" className="mt-6">

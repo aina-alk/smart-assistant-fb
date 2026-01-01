@@ -5,4 +5,5 @@ export { PatientForm } from './patient-form';
 export { PatientHeader } from './patient-header';
 export { PatientInfo } from './patient-info';
 export { PatientTabs } from './patient-tabs';
+export { PatientTasks } from './patient-tasks';
 export { PatientTimeline } from './patient-timeline';

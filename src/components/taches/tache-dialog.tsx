@@ -15,6 +15,8 @@ interface TacheDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tache?: Tache;
+  defaultPatientId?: string;
+  patientLocked?: boolean;
   onSubmit: (data: TacheFormData) => void;
   isSubmitting?: boolean;
 }
@@ -23,6 +25,8 @@ export function TacheDialog({
   open,
   onOpenChange,
   tache,
+  defaultPatientId,
+  patientLocked = false,
   onSubmit,
   isSubmitting = false,
 }: TacheDialogProps) {
@@ -49,6 +53,8 @@ export function TacheDialog({
         </DialogHeader>
         <TacheForm
           defaultValues={tache}
+          defaultPatientId={defaultPatientId}
+          patientLocked={patientLocked}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}

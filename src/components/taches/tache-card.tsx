@@ -26,6 +26,7 @@ import { getTacheCategorieLabel } from '@/types/tache';
 
 interface TacheCardProps {
   tache: Tache;
+  patientName?: string;
   onComplete?: (id: string) => void;
   onEdit?: (tache: Tache) => void;
   onDelete?: (id: string) => void;
@@ -62,7 +63,14 @@ function formatEcheance(date: Date): string {
   }).format(date);
 }
 
-export function TacheCard({ tache, onComplete, onEdit, onDelete, onPatientClick }: TacheCardProps) {
+export function TacheCard({
+  tache,
+  patientName,
+  onComplete,
+  onEdit,
+  onDelete,
+  onPatientClick,
+}: TacheCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const config = prioriteConfig[tache.priorite];
   const PrioriteIcon = config.icon;
@@ -115,7 +123,7 @@ export function TacheCard({ tache, onComplete, onEdit, onDelete, onPatientClick 
               className="flex items-center gap-1 hover:text-primary hover:underline"
             >
               <User className="h-3 w-3" />
-              Patient lié
+              {patientName || 'Patient lié'}
             </button>
           )}
           <span>Catégorie: {getTacheCategorieLabel(tache.categorie)}</span>
