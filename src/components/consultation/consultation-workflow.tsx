@@ -633,35 +633,61 @@ export function ConsultationWorkflow({
   // Handle ordonnance save
   const handleOrdonnanceSave = useCallback(
     async (
-      _medicaments: Parameters<typeof OrdonnanceDialog>[0]['onSave'] extends (
+      medicaments: Parameters<typeof OrdonnanceDialog>[0]['onSave'] extends (
         m: infer M,
         c?: string
       ) => Promise<void>
         ? M
         : never,
-      _commentaire?: string
+      commentaire?: string
     ) => {
-      // TODO: Save to FHIR MedicationRequest in a future version
-      toast.success('Ordonnance enregistrée');
+      if (!consultationId) {
+        toast.error("Veuillez d'abord sauvegarder la consultation");
+        return;
+      }
+
+      const response = await fetch(`/api/ordonnances/${consultationId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ medicaments, commentaire }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erreur lors de l'enregistrement");
+      }
     },
-    []
+    [consultationId]
   );
 
   // Handle bilan save
   const handleBilanSave = useCallback(
     async (
-      _examens: Parameters<typeof BilanDialog>[0]['onSave'] extends (
+      examens: Parameters<typeof BilanDialog>[0]['onSave'] extends (
         e: infer E,
         c: string
       ) => Promise<void>
         ? E
         : never,
-      _contexte_clinique: string
+      contexte_clinique: string
     ) => {
-      // TODO: Save to FHIR ServiceRequest in a future version
-      toast.success('Bilan enregistré');
+      if (!consultationId) {
+        toast.error("Veuillez d'abord sauvegarder la consultation");
+        return;
+      }
+
+      const response = await fetch(`/api/bilans/${consultationId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examens, contexte_clinique }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erreur lors de l'enregistrement");
+      }
     },
-    []
+    [consultationId]
   );
 
   const currentIndex = STEP_ORDER.indexOf(currentStep);
