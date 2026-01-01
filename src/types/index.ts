@@ -223,3 +223,30 @@ export {
   extractBilanRequestSchema,
   createBilanRequestSchema,
 } from './bilan';
+
+// Export des types Tâche
+export type {
+  TachePriorite,
+  TacheStatut,
+  TacheCategorie,
+  Tache,
+  TacheCreate,
+  TacheUpdate,
+  TacheSearchResult,
+  FHIRTaskStatus,
+  FHIRTaskPriority,
+  FHIRTaskExtension,
+  FHIRTask,
+} from './tache';
+
+export {
+  TASK_CATEGORY_SYSTEM,
+  TASK_EXTENSION_URLS,
+  tacheToFHIR,
+  fhirToTache,
+  isTacheEditable,
+  isTacheUrgente,
+  getTachePrioriteLabel,
+  getTacheStatutLabel,
+  getTacheCategorieLabel,
+} from './tache';
