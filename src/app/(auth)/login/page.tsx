@@ -6,11 +6,12 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BrandMark } from '@/components/brand';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { toast } from 'sonner';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
@@ -74,27 +75,10 @@ function LoginContent() {
   return (
     <Card className="shadow-xl border-border/50">
       <CardHeader className="space-y-4 text-center pb-6">
-        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        </div>
-        <div>
-          <CardTitle className="text-2xl font-bold text-foreground">Selav</CardTitle>
-          <CardDescription className="text-base mt-2">
-            L&apos;IA qui rédige pour vous pendant que vous soignez vos patients
-          </CardDescription>
-        </div>
+        <BrandMark size="xl" className="items-center" />
+        <CardDescription className="text-base">
+          L&apos;IA qui rédige pour vous pendant que vous soignez vos patients
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs defaultValue="email" className="w-full">

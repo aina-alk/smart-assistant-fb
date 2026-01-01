@@ -67,6 +67,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
+        brand: ['var(--font-dm-sans)', 'var(--font-inter)', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

@@ -13,7 +13,6 @@ import {
   Zap,
   Clock,
   Shield,
-  Stethoscope,
   ArrowRight,
   Check,
   Play,
@@ -22,6 +21,7 @@ import {
   ClipboardCheck,
   Loader2,
 } from 'lucide-react';
+import { BrandMark } from '@/components/brand';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -48,9 +48,8 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Stethoscope className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Selav</span>
+          <div className="flex items-center gap-3">
+            <BrandMark size="md" />
             <Badge variant="secondary" className="text-xs">
               Beta
             </Badge>
@@ -491,9 +490,8 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Stethoscope className="h-5 w-5 text-primary" />
-                <span className="font-bold">Selav</span>
+              <div className="mb-4">
+                <BrandMark size="sm" />
               </div>
               <p className="text-sm text-muted-foreground">
                 L&apos;assistant IA pour les professionnels de santé
