@@ -25,8 +25,7 @@ Tu dois répondre UNIQUEMENT en JSON valide avec la structure suivante:
   "motif": "string - motif de consultation en une phrase",
   "histoire": "string - histoire de la maladie, antécédents pertinents",
   "examen": {
-    "otoscopie_droite": "string ou null",
-    "otoscopie_gauche": "string ou null",
+    "otoscopie": "string ou null",
     "rhinoscopie": "string ou null",
     "oropharynx": "string ou null",
     "palpation_cervicale": "string ou null",

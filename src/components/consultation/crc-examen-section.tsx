@@ -52,12 +52,7 @@ const EXAMEN_CONFIG: Array<{
   label: string;
   icon: React.ReactNode;
 }> = [
-  { field: 'otoscopie_droite', label: 'Otoscopie droite', icon: <Ear className="h-3.5 w-3.5" /> },
-  {
-    field: 'otoscopie_gauche',
-    label: 'Otoscopie gauche',
-    icon: <Ear className="h-3.5 w-3.5 scale-x-[-1]" />,
-  },
+  { field: 'otoscopie', label: 'Otoscopie', icon: <Ear className="h-3.5 w-3.5" /> },
   { field: 'rhinoscopie', label: 'Rhinoscopie', icon: <Eye className="h-3.5 w-3.5" /> },
   { field: 'oropharynx', label: 'Oropharynx', icon: <Eye className="h-3.5 w-3.5" /> },
   { field: 'palpation_cervicale', label: 'Palpation cervicale', icon: null },

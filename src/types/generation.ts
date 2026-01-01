@@ -12,8 +12,7 @@ import { z } from 'zod';
  * Résultats de l'examen clinique ORL
  */
 export interface CRCExamen {
-  otoscopie_droite: string | null;
-  otoscopie_gauche: string | null;
+  otoscopie: string | null;
   rhinoscopie: string | null;
   oropharynx: string | null;
   palpation_cervicale: string | null;
@@ -107,8 +106,7 @@ export type GenerationErrorCode =
  * Schema Zod pour l'examen clinique
  */
 export const crcExamenSchema = z.object({
-  otoscopie_droite: z.string().nullable(),
-  otoscopie_gauche: z.string().nullable(),
+  otoscopie: z.string().nullable(),
   rhinoscopie: z.string().nullable(),
   oropharynx: z.string().nullable(),
   palpation_cervicale: z.string().nullable(),
