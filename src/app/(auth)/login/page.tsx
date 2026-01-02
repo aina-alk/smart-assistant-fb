@@ -17,8 +17,15 @@ import { toast } from 'sonner';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
 
 function LoginContent() {
-  const { signInWithGoogle, sendEmailLink, user, loading, emailLinkSent, emailLinkLoading } =
-    useAuth();
+  const {
+    signInWithGoogle,
+    sendEmailLink,
+    user,
+    loading,
+    sessionReady,
+    emailLinkSent,
+    emailLinkLoading,
+  } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -27,24 +34,26 @@ function LoginContent() {
   const redirect = searchParams.get('redirect') || '/';
 
   useEffect(() => {
-    // Si l'utilisateur est déjà connecté, rediriger
-    if (user && !loading) {
+    // Rediriger seulement quand l'utilisateur est connecté ET la session cookie est prête
+    if (user && sessionReady && !loading) {
       router.push(redirect);
     }
-  }, [user, loading, router, redirect]);
+  }, [user, loading, sessionReady, router, redirect]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsSigningIn(true);
       await signInWithGoogle();
       toast.success('Connexion réussie !');
-      router.push(redirect);
+      // Ne PAS rediriger ici - laisser le useEffect gérer la redirection
+      // quand sessionReady devient true
     } catch (error) {
       console.error('Erreur de connexion:', error);
       toast.error('Erreur lors de la connexion. Veuillez réessayer.');
-    } finally {
       setIsSigningIn(false);
     }
+    // Note: on ne met pas setIsSigningIn(false) dans finally car
+    // le useEffect va rediriger quand sessionReady est true
   };
 
   const handleEmailLinkSignIn = async (e: React.FormEvent) => {

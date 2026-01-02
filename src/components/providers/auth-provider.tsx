@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [emailLinkLoading, setEmailLinkLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     // Écouter les changements d'état d'authentification
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
 
           // Synchroniser les custom claims et créer la session
+          setSessionReady(false);
           try {
             let idToken = await firebaseUser.getIdToken(true);
 
@@ -65,8 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ idToken }),
             });
+
+            // Session cookie créé, prêt pour la navigation
+            setSessionReady(true);
           } catch (err) {
             console.error('Erreur lors de la création de la session:', err);
+            setSessionReady(false);
           }
         } else {
           setUser(null);
@@ -177,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         error,
+        sessionReady,
         signInWithGoogle,
         signOut,
         sendEmailLink,

@@ -21,6 +21,7 @@ export interface EmailLinkState {
 }
 
 export interface AuthContextType extends AuthState, EmailLinkState {
+  sessionReady: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   sendEmailLink: (email: string) => Promise<void>;
