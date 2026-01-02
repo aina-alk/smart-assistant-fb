@@ -1,0 +1,16 @@
+# Selav - Assistant IA pour documentation médicale
+# https://selav.fr
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /medecin/
+Disallow: /secretaire/
+Disallow: /technicien/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /_next/
+
+# Sitemap
+Sitemap: https://selav.fr/sitemap.xml

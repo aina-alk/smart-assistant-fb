@@ -65,24 +65,24 @@ Optimiser le responsive, les performances, configurer le déploiement Vercel, et
 
 ## Breakpoints Responsive
 
-| Breakpoint | Largeur | Comportement |
-|------------|---------|--------------|
-| Mobile | < 640px | Sidebar cachée, navigation bottom |
-| Tablet | 640-1023px | Sidebar rétractable |
-| Desktop | ≥ 1024px | Sidebar permanente |
+| Breakpoint | Largeur    | Comportement                      |
+| ---------- | ---------- | --------------------------------- |
+| Mobile     | < 640px    | Sidebar cachée, navigation bottom |
+| Tablet     | 640-1023px | Sidebar rétractable               |
+| Desktop    | ≥ 1024px   | Sidebar permanente                |
 
 ---
 
 ## Vérifications Responsive par Page
 
-| Page | Mobile | Tablet | Desktop |
-|------|--------|--------|---------|
-| Login | ✅ | ✅ | ✅ |
-| Dashboard | Cards empilées | 2 colonnes | 3 colonnes |
-| Patients liste | Cards | Table compacte | Table complète |
-| Patient détail | Onglets swipe | Standard | Standard |
-| Consultation | Workflow vertical | 2 colonnes | 2 colonnes |
-| Tâches | Liste simple | Standard | Standard |
+| Page           | Mobile            | Tablet         | Desktop        |
+| -------------- | ----------------- | -------------- | -------------- |
+| Login          | ✅                | ✅             | ✅             |
+| Dashboard      | Cards empilées    | 2 colonnes     | 3 colonnes     |
+| Patients liste | Cards             | Table compacte | Table complète |
+| Patient détail | Onglets swipe     | Standard       | Standard       |
+| Consultation   | Workflow vertical | 2 colonnes     | 2 colonnes     |
+| Tâches         | Liste simple      | Standard       | Standard       |
 
 ---
 
@@ -139,14 +139,14 @@ const CRCEditor = dynamic(() => import('@/components/consultation/crc-editor'), 
 
 ## Variables Vercel
 
-| Variable | Type | Description |
-|----------|------|-------------|
+| Variable                 | Type   | Description            |
+| ------------------------ | ------ | ---------------------- |
 | `NEXT_PUBLIC_FIREBASE_*` | Public | Config Firebase client |
-| `FIREBASE_ADMIN_*` | Secret | Config Firebase admin |
-| `GOOGLE_CLOUD_*` | Secret | Config GCP |
-| `ANTHROPIC_API_KEY` | Secret | API Claude |
-| `ASSEMBLYAI_API_KEY` | Secret | API transcription |
-| `NEXT_PUBLIC_APP_URL` | Public | URL production |
+| `FIREBASE_ADMIN_*`       | Secret | Config Firebase admin  |
+| `GOOGLE_CLOUD_*`         | Secret | Config GCP             |
+| `ANTHROPIC_API_KEY`      | Secret | API Claude             |
+| `ASSEMBLYAI_API_KEY`     | Secret | API transcription      |
+| `NEXT_PUBLIC_APP_URL`    | Public | URL production         |
 
 ---
 
@@ -185,7 +185,7 @@ const CRCEditor = dynamic(() => import('@/components/consultation/crc-editor'), 
 ## README.md Structure
 
 ```markdown
-# Super Assistant Médical
+# Selav
 
 L'IA qui rédige vos comptes-rendus médicaux pendant que vous soignez.
 
@@ -211,7 +211,9 @@ L'IA qui rédige vos comptes-rendus médicaux pendant que vous soignez.
 \`\`\`bash
 pnpm install
 cp .env.example .env.local
+
 # Configurer les variables...
+
 pnpm dev
 \`\`\`
 
@@ -278,6 +280,7 @@ Ce bloc est terminé quand :
 ## 🎉 Projet Terminé !
 
 Félicitations ! L'application Super Assistant Médical est maintenant :
+
 - ✅ Fonctionnelle avec toutes les features MVP
 - ✅ Responsive et optimisée
 - ✅ Déployée en production
