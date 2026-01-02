@@ -34,6 +34,8 @@ export const CSP_DIRECTIVES = {
     "'unsafe-eval'", // Requis pour Next.js dev (retiré en prod via headers)
     'https://*.firebaseapp.com',
     'https://*.googleapis.com',
+    'https://apis.google.com', // Google Identity Services
+    'https://*.gstatic.com', // Google static resources
   ],
 
   'style-src': ["'self'", "'unsafe-inline'"], // Tailwind inline styles
@@ -69,6 +71,8 @@ export const CSP_DIRECTIVES = {
   'frame-src': [
     "'self'",
     'https://*.firebaseapp.com', // Firebase Auth popup
+    'https://accounts.google.com', // Google OAuth popup
+    'https://*.google.com', // Google Sign-In iframe
   ],
 
   'frame-ancestors': ["'none'"], // Clickjacking protection
