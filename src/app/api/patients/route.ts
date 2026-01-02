@@ -72,6 +72,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Erreur d'authentification Google Cloud
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    if (
+      errorMessage.includes('Could not load the default credentials') ||
+      errorMessage.includes('Unable to detect a Project Id')
+    ) {
+      return NextResponse.json(
+        { error: 'Service FHIR non configuré: credentials Google Cloud manquantes' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des patients' },
       { status: 500 }

@@ -45,10 +45,42 @@ export class FHIRClient {
     // Construire l'URL de base du FHIR Store
     this.baseUrl = `https://healthcare.googleapis.com/v1/projects/${projectId}/locations/${location}/datasets/${datasetId}/fhirStores/${fhirStoreId}/fhir`;
 
-    // Initialiser GoogleAuth
+    // Initialiser GoogleAuth avec credentials explicites pour Vercel
+    const credentials = this.getCredentials();
     this.auth = new GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-healthcare'],
+      ...(credentials && { credentials }),
     });
+  }
+
+  /**
+   * Récupère les credentials Google Cloud depuis les variables d'environnement
+   * Supporte GOOGLE_APPLICATION_CREDENTIALS_JSON (Vercel) ou ADC (local)
+   */
+  private getCredentials(): { client_email: string; private_key: string } | null {
+    // Option 1: JSON credentials en variable d'environnement (Vercel)
+    const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    if (credentialsJson) {
+      try {
+        const parsed = JSON.parse(credentialsJson);
+        return {
+          client_email: parsed.client_email,
+          private_key: parsed.private_key,
+        };
+      } catch {
+        console.error('FHIR: Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON');
+      }
+    }
+
+    // Option 2: Credentials séparées (alternative)
+    const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL;
+    const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    if (clientEmail && privateKey) {
+      return { client_email: clientEmail, private_key: privateKey };
+    }
+
+    // Option 3: Fallback sur ADC (local dev avec gcloud auth)
+    return null;
   }
 
   /**
