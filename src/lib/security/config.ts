@@ -155,7 +155,7 @@ export const RATE_LIMIT_CONFIG = {
   },
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 10, // 10 tentatives auth/15min
+    maxRequests: 30, // 30 tentatives login/15min (protège brute force sans bloquer usage normal)
   },
 } as const;
 

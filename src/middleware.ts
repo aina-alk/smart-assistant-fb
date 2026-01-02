@@ -94,13 +94,19 @@ export async function middleware(request: NextRequest) {
   // 3. RATE LIMITING (API routes uniquement)
   // ========================================================================
   if (pathname.startsWith('/api/')) {
+    // Endpoints auth internes exemptés du rate limiting
+    // Ces endpoints sont appelés fréquemment pour la gestion de session
+    const authExemptedPaths = ['/api/auth/session', '/api/auth/sync-claims', '/api/auth/me'];
+    const isAuthExempted = authExemptedPaths.some((p) => pathname.startsWith(p));
+
     // Déterminer le type de rate limit selon l'endpoint
     let rateLimitType: RateLimitType = 'api';
     if (pathname.startsWith('/api/generation') || pathname.startsWith('/api/documents')) {
       rateLimitType = 'generation';
     } else if (pathname.startsWith('/api/transcription')) {
       rateLimitType = 'transcription';
-    } else if (pathname.startsWith('/api/auth')) {
+    } else if (pathname.startsWith('/api/auth') && !isAuthExempted) {
+      // Rate limit auth uniquement pour les endpoints de login (email-link, etc.)
       rateLimitType = 'auth';
     }
 
