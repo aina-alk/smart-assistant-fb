@@ -123,7 +123,7 @@ export function PatientForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sexe *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner" />
