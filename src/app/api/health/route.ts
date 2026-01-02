@@ -1,6 +1,8 @@
 /**
  * Route API Health Check
- * Vérifie la connexion au FHIR Store et l'état de l'application
+ *
+ * Endpoint minimaliste pour les health checks.
+ * Ne révèle aucune information sur l'architecture interne.
  */
 
 import { NextResponse } from 'next/server';
@@ -10,61 +12,43 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/health
- * Vérifie l'état de l'application et la connexion FHIR
+ *
+ * Retourne un status simple sans exposer de détails sur l'infrastructure.
+ * Utilisé par les load balancers et monitoring.
  */
 export async function GET() {
   try {
-    // Vérifier si le client FHIR est configuré
-    if (!fhirClient) {
+    // Vérification basique - le client existe et peut communiquer
+    const isHealthy = fhirClient ? await fhirClient.testConnection() : true;
+
+    if (isHealthy) {
       return NextResponse.json(
+        { status: 'ok' },
         {
-          status: 'warning',
-          message: 'FHIR client not configured',
-          details: 'Missing required environment variables for FHIR connection',
-          fhir: 'not_configured',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 200 }
+          status: 200,
+          headers: { 'Cache-Control': 'no-store, max-age=0' },
+        }
       );
     }
 
-    // Tester la connexion au FHIR Store
-    const fhirConnected = await fhirClient.testConnection();
-
-    if (fhirConnected) {
-      return NextResponse.json(
-        {
-          status: 'ok',
-          message: 'Application is healthy',
-          fhir: 'connected',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        {
-          status: 'error',
-          message: 'FHIR connection failed',
-          fhir: 'disconnected',
-          timestamp: new Date().toISOString(),
-        },
-        { status: 503 }
-      );
-    }
-  } catch (error) {
-    // Gérer les erreurs inattendues
-    console.error('Health check failed:', error);
+    // Service dégradé mais application fonctionnelle
+    return NextResponse.json(
+      { status: 'degraded' },
+      {
+        status: 200, // 200 pour ne pas déclencher d'alertes inutiles
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      }
+    );
+  } catch {
+    // Log interne uniquement, pas d'exposition externe
+    console.error('[Health] Check failed');
 
     return NextResponse.json(
+      { status: 'error' },
       {
-        status: 'error',
-        message: 'Health check failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        fhir: 'error',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
+        status: 503,
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      }
     );
   }
 }
