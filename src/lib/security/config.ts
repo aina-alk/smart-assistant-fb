@@ -85,6 +85,8 @@ export const CSP_DIRECTIVES = {
 
   'worker-src': ["'self'", 'blob:'],
 
+  'media-src': ["'self'", 'blob:'], // Audio/vidéo locaux + blobs enregistrés
+
   'manifest-src': ["'self'"],
 
   // Upgrade HTTP to HTTPS
