@@ -56,15 +56,23 @@ export class Deanonymizer {
     let restoredText = anonymizedText;
     let tokensRestored = 0;
     const unmatchedTokens: string[] = [];
+    const seenTokens = new Set<string>();
 
+    // Find all tokens in the text
     const tokenMatches = anonymizedText.matchAll(TOKEN_PATTERN);
 
     for (const match of tokenMatches) {
       const fullToken = match[0];
+
+      // Skip if already processed (avoid counting duplicates)
+      if (seenTokens.has(fullToken)) continue;
+      seenTokens.add(fullToken);
+
       const entry = context.entries.get(fullToken);
 
       if (entry) {
-        restoredText = restoredText.replace(fullToken, entry.originalValue);
+        // Use replaceAll to handle multiple occurrences of the same token
+        restoredText = restoredText.replaceAll(fullToken, entry.originalValue);
         tokensRestored++;
       } else {
         unmatchedTokens.push(fullToken);

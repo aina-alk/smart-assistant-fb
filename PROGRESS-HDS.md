@@ -280,7 +280,29 @@ src/app/api/
   - Fonction `withAnonymization()` pour wrapper async
   - TypeScript ✅ | ESLint ✅
 - [x] **PR créée** : https://github.com/aina-alk/smart-assistant-fb/pull/2
-- [ ] **Prochain bloc** : 2.1 (Route ordonnances) — Bloc 1 Anonymisation terminé!
+
+### 3 janvier 2025 — Session 4 (Corrections critiques)
+
+- [x] **Bug fix** : Patterns regex avec groupes capturants cassaient la détection
+  - NIR, dates, code postal, adresse utilisaient `(...)` au lieu de `(?:...)`
+  - Le code `match[1] || match[0]` retournait le groupe interne, pas le match complet
+  - **Solution** : Conversion en groupes non-capturants `(?:...)`
+- [x] **Bug fix** : Faux positifs de noms sur acronymes (NIR, ORL, CHU)
+  - Ajout `NAME_EXCLUSION_LIST` avec 40+ acronymes médicaux/techniques
+  - Ajout `validateName()` pour filtrer les faux positifs
+  - Pattern noms en majuscules : minimum 3 caractères
+- [x] **Bug fix** : `deanonymize()` n'utilisait pas `replaceAll()`
+  - Risque de restauration partielle si token dupliqué
+  - **Solution** : `replaceAll()` + tracking des tokens vus
+- [x] **Tests validés** : 7/7 edge cases passent
+  - NIR avec espaces ✅
+  - Pas de faux positifs acronymes ✅
+  - Date ISO ✅
+  - Téléphone +33 ✅
+  - Validation clé NIR ✅
+  - Adresse boulevard ✅
+  - Restauration complète ✅
+- [x] **Prochain bloc** : 2.1 (Route ordonnances) — Bloc 1 Anonymisation validé!
 
 ---
 
@@ -290,7 +312,7 @@ Une fois tous les blocs terminés :
 
 - [x] `pnpm build` réussit sans erreur
 - [x] `pnpm tsc --noEmit` sans erreur TypeScript
-- [ ] Tests manuels des fonctionnalités critiques
+- [x] Tests manuels des fonctionnalités critiques (module anonymisation validé)
 - [x] Docker build et run fonctionnels
 - [x] Déploiement Scalingo réussi (https://selav-med-assist.osc-fr1.scalingo.io)
 - [ ] Checklist `docs/deployment-checklist.md` complétée

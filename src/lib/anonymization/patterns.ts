@@ -21,13 +21,15 @@ import { SensitiveDataType } from './types';
  * - CCC : Code commune
  * - NNN : Numéro d'ordre
  * - CC : Clé de contrôle
+ *
+ * NOTE: Use non-capturing groups (?:...) to avoid match[1] returning internal groups
  */
 export const NIR_PATTERN =
-  /\b[12][0-9]{2}(0[1-9]|1[0-2]|[2-9][0-9])(0[1-9]|[1-8][0-9]|9[0-9]|2[AB])[0-9]{3}[0-9]{3}[0-9]{2}\b/g;
+  /\b[12][0-9]{2}(?:0[1-9]|1[0-2]|[2-9][0-9])(?:0[1-9]|[1-8][0-9]|9[0-9]|2[AB])[0-9]{3}[0-9]{3}[0-9]{2}\b/g;
 
 /** NIR avec espaces/tirets optionnels */
 export const NIR_PATTERN_FLEXIBLE =
-  /\b[12][\s.-]?[0-9]{2}[\s.-]?(0[1-9]|1[0-2]|[2-9][0-9])[\s.-]?(0[1-9]|[1-8][0-9]|9[0-9]|2[AB])[\s.-]?[0-9]{3}[\s.-]?[0-9]{3}[\s.-]?[0-9]{2}\b/g;
+  /\b[12][\s.-]?[0-9]{2}[\s.-]?(?:0[1-9]|1[0-2]|[2-9][0-9])[\s.-]?(?:0[1-9]|[1-8][0-9]|9[0-9]|2[AB])[\s.-]?[0-9]{3}[\s.-]?[0-9]{3}[\s.-]?[0-9]{2}\b/g;
 
 /**
  * Numéros de téléphone français
@@ -47,41 +49,134 @@ export const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 /**
  * Dates au format français
  * Formats : JJ/MM/AAAA, JJ-MM-AAAA, JJ.MM.AAAA
+ *
+ * NOTE: Use non-capturing groups (?:...) to avoid match[1] returning day/month/year
  */
 export const BIRTH_DATE_PATTERN =
-  /\b(0[1-9]|[12][0-9]|3[01])[/\-.](0[1-9]|1[0-2])[/\-.](19[0-9]{2}|20[0-2][0-9])\b/g;
+  /\b(?:0[1-9]|[12][0-9]|3[01])[/\-.](?:0[1-9]|1[0-2])[/\-.](?:19[0-9]{2}|20[0-2][0-9])\b/g;
 
 /** Format ISO (AAAA-MM-JJ) */
 export const DATE_ISO_PATTERN =
-  /\b(19[0-9]{2}|20[0-2][0-9])-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])\b/g;
+  /\b(?:19[0-9]{2}|20[0-2][0-9])-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])\b/g;
 
 /**
  * Code postal français (5 chiffres)
  * Exclut les séquences qui font partie d'autres patterns (NIR, téléphone)
+ *
+ * NOTE: Use non-capturing groups (?:...) to return full postal code
  */
-export const POSTAL_CODE_PATTERN = /\b(0[1-9]|[1-8][0-9]|9[0-5]|97[1-6]|98[4-9])[0-9]{3}\b/g;
+export const POSTAL_CODE_PATTERN = /\b(?:0[1-9]|[1-8][0-9]|9[0-5]|97[1-6]|98[4-9])[0-9]{3}\b/g;
 
 /**
  * Adresse postale française
  * Détecte : numéro + type de voie + nom de voie
+ *
+ * NOTE: Use non-capturing group (?:...) for street type to return full address
  */
 export const ADDRESS_PATTERN =
-  /\b\d{1,4}[\s,]*(rue|avenue|av\.|boulevard|bd\.|allée|impasse|place|chemin|route|passage|square|quai|cours)[\s]+[A-Za-zÀ-ÿ\s\-']{3,50}\b/gi;
+  /\b\d{1,4}[\s,]*(?:rue|avenue|av\.|boulevard|bd\.|allée|impasse|place|chemin|route|passage|square|quai|cours)[\s]+[A-Za-zÀ-ÿ\s\-']{3,50}\b/gi;
 
 /**
  * Patterns de contexte pour les noms propres
  * Détecte les noms après des marqueurs comme "M.", "Mme", "Patient", "Dr"
+ *
+ * NOTE: These patterns intentionally use capturing groups to extract the name
+ * after the context marker (e.g., "M. DUPONT" → captures "DUPONT")
  */
 export const NAME_CONTEXT_PATTERNS = [
-  // Civilités suivies d'un nom
+  // Civilités suivies d'un nom (capture le nom après la civilité)
   /(?:M\.|Mr\.|Mme|Mlle|Madame|Monsieur|Dr\.?|Docteur|Patient|Patiente)[\s]+([A-ZÀ-Ÿ][a-zà-ÿ]+(?:[\s-][A-ZÀ-Ÿ][a-zà-ÿ]+)*)/g,
 
-  // "Nom :" ou "Prénom :" suivi d'une valeur
+  // "Nom :" ou "Prénom :" suivi d'une valeur (capture la valeur)
   /(?:Nom|Prénom|Nom de famille|Nom de naissance)[\s]*:[\s]*([A-ZÀ-Ÿ][a-zà-ÿ]+(?:[\s-][A-ZÀ-Ÿ][a-zà-ÿ]+)*)/gi,
 
   // Nom de famille en majuscules (convention française)
-  /\b([A-ZÀ-Ÿ]{2,}(?:[\s-][A-ZÀ-Ÿ]{2,})*)\b/g,
+  // Requires at least 3 characters to avoid acronyms like "NIR", "TEL"
+  /\b([A-ZÀ-Ÿ]{3,}(?:[\s-][A-ZÀ-Ÿ]{2,})*)\b/g,
 ];
+
+/**
+ * Words that should NOT be detected as names
+ * Common French medical/technical acronyms and words
+ */
+export const NAME_EXCLUSION_LIST = new Set([
+  // Medical acronyms
+  'NIR',
+  'TEL',
+  'FAX',
+  'EMAIL',
+  'SMS',
+  'IRM',
+  'TDM',
+  'ECG',
+  'EEG',
+  'EMG',
+  'ORL',
+  'CHU',
+  'SAMU',
+  'SMUR',
+  'AVC',
+  'IDM',
+  'HTA',
+  'AIT',
+  'ACR',
+  'AVP',
+  // Document types
+  'CRC',
+  'CRO',
+  'CRH',
+  'NFS',
+  'BES',
+  'TSH',
+  'PSA',
+  'INR',
+  'HBA',
+  'VGM',
+  // Common French words in caps
+  'PATIENT',
+  'PATIENTE',
+  'DOCTEUR',
+  'CONSULTATION',
+  'ORDONNANCE',
+  'BILAN',
+  'EXAMEN',
+  'DIAGNOSTIC',
+  'TRAITEMENT',
+  'ANTECEDENTS',
+  'ALLERGIES',
+  'MOTIF',
+  'COMPTE',
+  'RENDU',
+  'DATE',
+  'LIEU',
+  'ADRESSE',
+  'TELEPHONE',
+  // Technical
+  'URL',
+  'PDF',
+  'HTML',
+  'JSON',
+  'API',
+  'HTTPS',
+  'HTTP',
+]);
+
+/**
+ * Validates that a detected name is not a common acronym or technical term
+ */
+export function validateName(name: string): boolean {
+  // Reject if in exclusion list
+  if (NAME_EXCLUSION_LIST.has(name.toUpperCase())) {
+    return false;
+  }
+
+  // Reject single-word names shorter than 3 chars (likely acronyms)
+  if (!name.includes(' ') && !name.includes('-') && name.length < 3) {
+    return false;
+  }
+
+  return true;
+}
 
 // ===== INTERFACES =====
 
@@ -208,6 +303,7 @@ export const PATTERN_CONFIGS: PatternConfig[] = [
     type: SensitiveDataType.NAME,
     patterns: NAME_CONTEXT_PATTERNS,
     priority: 7, // Priorité basse car plus de faux positifs
+    validator: validateName,
   },
 ];
 
