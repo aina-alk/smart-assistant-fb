@@ -13,7 +13,11 @@ import {
   isSignInWithEmailLink,
   signInWithEmailLink,
 } from 'firebase/auth';
-import { auth, googleProvider, getEmailLinkActionCodeSettings } from '@/lib/firebase/config';
+import {
+  getAuthInstance,
+  getGoogleProviderInstance,
+  getEmailLinkActionCodeSettings,
+} from '@/lib/firebase/config';
 import type { AuthContextType, AuthUser } from '@/types/auth';
 
 // Clé localStorage pour stocker l'email en attendant le callback
@@ -32,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Écouter les changements d'état d'authentification
     const unsubscribe = onAuthStateChanged(
-      auth,
+      getAuthInstance(),
       async (firebaseUser) => {
         if (firebaseUser) {
           setUser({
@@ -97,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(getAuthInstance(), getGoogleProviderInstance());
       // L'état sera mis à jour automatiquement via onAuthStateChanged
     } catch (err) {
       console.error('Erreur lors de la connexion Google:', err);
@@ -109,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setError(null);
-      await firebaseSignOut(auth);
+      await firebaseSignOut(getAuthInstance());
 
       // Supprimer le cookie de session côté serveur
       await fetch('/api/auth/session', {
@@ -134,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setEmailLinkSent(false);
 
       const actionCodeSettings = getEmailLinkActionCodeSettings();
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      await sendSignInLinkToEmail(getAuthInstance(), email, actionCodeSettings);
 
       // Sauvegarder l'email pour la vérification au callback
       window.localStorage.setItem(EMAIL_FOR_SIGN_IN_KEY, email);
@@ -152,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Vérifie si le lien actuel est un lien de connexion par email
    */
   const isEmailLinkSignInFn = (link: string): boolean => {
-    return isSignInWithEmailLink(auth, link);
+    return isSignInWithEmailLink(getAuthInstance(), link);
   };
 
   /**
@@ -163,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setEmailLinkLoading(true);
 
-      await signInWithEmailLink(auth, email, link);
+      await signInWithEmailLink(getAuthInstance(), email, link);
 
       // Nettoyer l'email stocké
       window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);

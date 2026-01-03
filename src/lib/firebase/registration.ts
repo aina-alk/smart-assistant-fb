@@ -4,7 +4,7 @@
  */
 
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { getDbInstance } from '@/lib/firebase/config';
 import type {
   RegistrationRole,
   CallbackSlot,
@@ -121,7 +121,7 @@ function mapCallbackSlots(slots: CallbackSlot[]): ('morning' | 'afternoon' | 'ev
  * Le document est créé avec le status 'pending_call' pour déclencher le workflow d'approbation
  */
 export async function createUserDocument(params: CreateUserDocumentParams): Promise<void> {
-  const userRef = doc(db, 'users', params.uid);
+  const userRef = doc(getDbInstance(), 'users', params.uid);
 
   const now = new Date();
 

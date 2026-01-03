@@ -16,7 +16,7 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase/config';
+import { getAuthInstance, getDbInstance } from '@/lib/firebase/config';
 import type { UserData } from '@/hooks/useAuthorization';
 import type { UserStatus } from '@/types/user';
 
@@ -47,7 +47,7 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
 
   // Attendre que l'auth soit prête avec les claims synchronisés
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(getAuthInstance(), async (user) => {
       if (user) {
         try {
           const idToken = await user.getIdToken(true);
@@ -98,7 +98,7 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
       constraints.unshift(where('status', '==', statusFilter));
     }
 
-    const q = query(collection(db, 'users'), ...constraints);
+    const q = query(collection(getDbInstance(), 'users'), ...constraints);
 
     // Écouter les changements
     const unsubscribe = onSnapshot(
@@ -136,7 +136,7 @@ export function useUserDetail(userId: string | null) {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+    const unsubscribe = onAuthStateChanged(getAuthInstance(), async (authUser) => {
       if (authUser) {
         try {
           const idToken = await authUser.getIdToken(true);
@@ -183,7 +183,7 @@ export function useUserDetail(userId: string | null) {
     setError(null);
 
     const unsubscribe = onSnapshot(
-      doc(db, 'users', userId),
+      doc(getDbInstance(), 'users', userId),
       (snapshot) => {
         if (snapshot.exists()) {
           setUser({ id: snapshot.id, ...snapshot.data() } as UserData);

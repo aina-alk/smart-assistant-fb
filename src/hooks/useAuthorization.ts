@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { onAuthStateChanged, getIdTokenResult, type User as FirebaseUser } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/config';
+import { getAuthInstance, getDbInstance } from '@/lib/firebase/config';
 import type { CustomClaims, UserRole, UserStatus } from '@/types/user';
 
 // Type pour les données utilisateur Firestore
@@ -83,7 +83,7 @@ export function useAuthorization(): AuthorizationState {
 
   // Écouter l'état d'authentification Firebase
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(getAuthInstance(), (user) => {
       setFirebaseUser(user);
       if (!user) {
         setUserData(null);
@@ -129,7 +129,7 @@ export function useAuthorization(): AuthorizationState {
 
     // Écouter le document Firestore
     const unsubscribe = onSnapshot(
-      doc(db, 'users', firebaseUser.uid),
+      doc(getDbInstance(), 'users', firebaseUser.uid),
       (snapshot) => {
         if (snapshot.exists()) {
           setUserData({ id: snapshot.id, ...snapshot.data() } as UserData);

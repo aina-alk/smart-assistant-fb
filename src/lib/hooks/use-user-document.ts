@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot, type DocumentSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { getDbInstance } from '@/lib/firebase/config';
 import type { User } from '@/types/user';
 
 interface UseUserDocumentOptions {
@@ -55,7 +55,7 @@ export function useUserDocument(
     setError(null);
 
     // Créer le listener temps réel
-    const userRef = doc(db, 'users', uid);
+    const userRef = doc(getDbInstance(), 'users', uid);
 
     const unsubscribe = onSnapshot(
       userRef,

@@ -64,37 +64,31 @@ function getGoogleProvider(): GoogleAuthProvider {
   return _googleProvider;
 }
 
-export const auth: Auth = new Proxy({} as Auth, {
-  get(_, prop) {
-    const instance = getFirebaseAuth();
-    const value = instance[prop as keyof Auth];
-    return typeof value === 'function' ? value.bind(instance) : value;
-  },
-});
+/**
+ * Getters pour les instances Firebase
+ *
+ * Note: On exporte des getters au lieu de Proxies car signInWithPopup
+ * et d'autres méthodes Firebase vérifient instanceof sur les arguments.
+ * Les Proxies ne passent pas ces vérifications.
+ */
 
-export const db: Firestore = new Proxy({} as Firestore, {
-  get(_, prop) {
-    const instance = getFirebaseDb();
-    const value = instance[prop as keyof Firestore];
-    return typeof value === 'function' ? value.bind(instance) : value;
-  },
-});
+/** @deprecated Utiliser getAuthInstance() pour les opérations d'auth */
+export const auth: Auth = {} as Auth;
 
-export const functions: Functions = new Proxy({} as Functions, {
-  get(_, prop) {
-    const instance = getFirebaseFunctions();
-    const value = (instance as unknown as Record<string, unknown>)[prop as string];
-    return typeof value === 'function' ? value.bind(instance) : value;
-  },
-});
+/** @deprecated Utiliser getDbInstance() pour Firestore */
+export const db: Firestore = {} as Firestore;
 
-export const googleProvider: GoogleAuthProvider = new Proxy({} as GoogleAuthProvider, {
-  get(_, prop) {
-    const instance = getGoogleProvider();
-    const value = instance[prop as keyof GoogleAuthProvider];
-    return typeof value === 'function' ? value.bind(instance) : value;
-  },
-});
+/** @deprecated Utiliser getFunctionsInstance() pour Cloud Functions */
+export const functions: Functions = {} as Functions;
+
+/** @deprecated Utiliser getGoogleProviderInstance() pour OAuth */
+export const googleProvider: GoogleAuthProvider = {} as GoogleAuthProvider;
+
+// Getters qui retournent les vraies instances
+export const getAuthInstance = getFirebaseAuth;
+export const getDbInstance = getFirebaseDb;
+export const getFunctionsInstance = getFirebaseFunctions;
+export const getGoogleProviderInstance = getGoogleProvider;
 
 /**
  * Configuration pour l'authentification par lien email (passwordless)
