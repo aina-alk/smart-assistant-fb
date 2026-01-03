@@ -120,8 +120,28 @@ export function useTranscriptionUpload() {
         setStatus('uploading');
         setUploadProgress(0);
 
+        // Debug: log blob info before sending
+        console.warn('[Transcription] Uploading audio:', {
+          blobSize: audioBlob?.size,
+          blobType: audioBlob?.type,
+          isBlob: audioBlob instanceof Blob,
+        });
+
+        // Validate blob before sending
+        if (!audioBlob || !(audioBlob instanceof Blob) || audioBlob.size === 0) {
+          throw new Error(`Audio invalide: size=${audioBlob?.size}, type=${audioBlob?.type}`);
+        }
+
         const formData = new FormData();
-        formData.append('audio', audioBlob);
+        formData.append('audio', audioBlob, 'recording.webm');
+
+        // Debug: verify FormData content
+        const audioFromFormData = formData.get('audio');
+        console.warn('[Transcription] FormData content:', {
+          hasAudio: !!audioFromFormData,
+          audioType: audioFromFormData instanceof Blob ? 'Blob' : typeof audioFromFormData,
+          audioSize: audioFromFormData instanceof Blob ? audioFromFormData.size : 0,
+        });
 
         const response = await fetch('/api/transcription', {
           method: 'POST',
