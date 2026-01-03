@@ -96,13 +96,23 @@ export function parseMultipartFormData(buffer: ArrayBuffer, contentType: string)
   const boundaryBytes = new TextEncoder().encode('--' + boundary);
   const crlfCrlf = new TextEncoder().encode('\r\n\r\n');
 
+  // Debug logging
+  console.error('[MultipartParser] Parsing:', {
+    bufferSize: buffer.byteLength,
+    boundary: boundary.substring(0, 50),
+    boundaryBytesLength: boundaryBytes.length,
+    firstBytes: bytesToString(data, 0, Math.min(200, data.length)),
+  });
+
   let position = 0;
 
   // Find first boundary
   position = findSequence(data, boundaryBytes, position);
   if (position === -1) {
+    console.error('[MultipartParser] Boundary not found in body');
     throw new Error('No boundary found in body');
   }
+  console.error('[MultipartParser] First boundary at position:', position);
 
   while (true) {
     // Move past the boundary
@@ -128,6 +138,14 @@ export function parseMultipartFormData(buffer: ArrayBuffer, contentType: string)
     // Extract and parse headers
     const headerSection = bytesToString(data, position, headerEnd);
     const { name, filename, contentType: partContentType } = parsePartHeaders(headerSection);
+
+    // Debug: log each part found
+    console.error('[MultipartParser] Part found:', {
+      name,
+      filename,
+      contentType: partContentType,
+      headerSection: headerSection.substring(0, 150),
+    });
 
     // Move to body start
     const bodyStart = headerEnd + 4; // Skip \r\n\r\n

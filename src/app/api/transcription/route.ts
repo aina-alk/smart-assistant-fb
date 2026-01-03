@@ -95,11 +95,24 @@ export async function POST(
 
       // Parser manuellement le multipart/form-data
       const parsed = parseMultipartFormData(rawBody, contentType);
+
+      // Debug: log all parsed fields and files
+      console.error('[Transcription] Parsed data:', {
+        filesCount: parsed.files.size,
+        fieldsCount: parsed.fields.size,
+        fileKeys: Array.from(parsed.files.keys()),
+        fieldKeys: Array.from(parsed.fields.keys()),
+      });
+
       const audioFromParser = parsed.files.get('audio');
 
       if (audioFromParser) {
         audioFile = createBlobFromParsedFile(audioFromParser);
         console.error('[Transcription] Audio extracted successfully, size:', audioFile.size);
+      } else {
+        // Check if 'audio' was incorrectly parsed as a field
+        const audioAsField = parsed.fields.get('audio');
+        console.error('[Transcription] Audio not found in files. As field?:', !!audioAsField);
       }
     } catch (parseError) {
       const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
