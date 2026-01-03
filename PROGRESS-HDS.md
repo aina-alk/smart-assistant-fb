@@ -1,7 +1,7 @@
 # PROGRESS-HDS.md — Tableau de Bord Conformité HDS
 
 > **Objectif** : Migration vers hébergement certifié HDS avec anonymisation, audit nominatif et fail-secure
-> **Dernière mise à jour** : 2 janvier 2025 — Session initiale
+> **Dernière mise à jour** : 3 janvier 2026 — Déploiement Scalingo réussi
 
 ---
 
@@ -241,6 +241,15 @@ src/app/api/
   - Création `docs/scalingo-setup.md` (guide configuration)
   - Ajout scripts npm : `check-env`, `deploy`
   - TypeScript ✅ | ESLint ✅
+- [x] **Déploiement Scalingo** :
+  - Création app `selav-med-assist` sur région `osc-fr1` (HDS)
+  - Addon Redis `redis-starter-512` provisionné
+  - Génération clé SSH ed25519 et ajout à Scalingo
+  - Correction `pnpm-workspace.yaml` (exclusion functions)
+  - Correction `tsconfig.json` (exclusion functions, .firebase, dataconnect)
+  - Correction `Procfile` (chemin `.next/standalone/server.js`)
+  - ✅ **Déployé et fonctionnel** : https://selav-med-assist.osc-fr1.scalingo.io
+  - Health check répond (warning: variables env non configurées)
 - [ ] **Prochain bloc** : 1.1 (Types anonymisation) — Bloc 0 Infrastructure terminé!
 
 ---
@@ -249,11 +258,11 @@ src/app/api/
 
 Une fois tous les blocs terminés :
 
-- [ ] `pnpm build` réussit sans erreur
-- [ ] `pnpm tsc --noEmit` sans erreur TypeScript
+- [x] `pnpm build` réussit sans erreur
+- [x] `pnpm tsc --noEmit` sans erreur TypeScript
 - [ ] Tests manuels des fonctionnalités critiques
-- [ ] Docker build et run fonctionnels
-- [ ] Déploiement Scalingo réussi
+- [x] Docker build et run fonctionnels
+- [x] Déploiement Scalingo réussi (https://selav-med-assist.osc-fr1.scalingo.io)
 - [ ] Checklist `docs/deployment-checklist.md` complétée
 
 ---
