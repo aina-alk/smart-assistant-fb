@@ -4,6 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Force Node.js runtime for consistency with main transcription route
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { assemblyAIClient, AssemblyAIError } from '@/lib/api/assemblyai-client';
 import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
 import type { GetTranscriptionResponse, TranscriptionErrorResponse } from '@/types/transcription';

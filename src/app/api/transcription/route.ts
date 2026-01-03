@@ -4,6 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Force Node.js runtime for FormData parsing (Edge runtime has issues with multipart)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import { assemblyAIClient, AssemblyAIError } from '@/lib/api/assemblyai-client';
 import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
 import { ASSEMBLYAI_LIMITS, SUPPORTED_AUDIO_TYPES } from '@/lib/constants/assemblyai';
