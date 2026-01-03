@@ -158,6 +158,9 @@ export async function middleware(request: NextRequest) {
   return applySecurityHeaders(response, request);
 }
 
+// Force Node.js runtime pour le middleware (ioredis non compatible Edge Runtime)
+export const runtime = 'nodejs';
+
 export const config = {
   matcher: [
     /*
