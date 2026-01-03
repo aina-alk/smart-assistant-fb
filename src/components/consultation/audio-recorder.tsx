@@ -1,13 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
-import { useAudioPlayer } from '@/lib/hooks/use-audio-player';
-import { useWaveform } from '@/lib/hooks/use-waveform';
-import { useAudioStore } from '@/lib/stores/audio-store';
-import { WaveformDisplay } from './waveform-display';
-import { AudioTimeline } from './audio-timeline';
 import { AudioControls } from './audio-controls';
 import { formatTime } from '@/types/audio';
 import { cn } from '@/lib/utils';
@@ -18,7 +13,7 @@ interface AudioRecorderProps {
 }
 
 export function AudioRecorder({ onTranscribe, className }: AudioRecorderProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const hasAutoTranscribedRef = useRef(false);
 
   const {
     status,
@@ -33,46 +28,17 @@ export function AudioRecorder({ onTranscribe, className }: AudioRecorderProps) {
     reset,
   } = useAudioRecorder();
 
-  const { isPlaying, currentTime, play, pause, seek } = useAudioPlayer();
-
-  const { waveformData, isAnalyzing, analyzeBlob } = useWaveform();
-
-  const storeStatus = useAudioStore((state) => state.status);
-
+  // Auto-transcription : envoyer automatiquement à l'arrêt de l'enregistrement
   useEffect(() => {
-    if (audioBlob && storeStatus === 'stopped') {
-      analyzeBlob(audioBlob);
+    if (status === 'stopped' && audioBlob && onTranscribe && !hasAutoTranscribedRef.current) {
+      hasAutoTranscribedRef.current = true;
+      onTranscribe(audioBlob);
     }
-  }, [audioBlob, storeStatus, analyzeBlob]);
-
-  const handleSeek = useCallback(
-    (time: number) => {
-      seek(time);
-    },
-    [seek]
-  );
-
-  const handleWaveformClick = useCallback(
-    (progress: number) => {
-      if (duration > 0) {
-        seek(progress * duration);
-      }
-    },
-    [duration, seek]
-  );
-
-  const handleTranscribe = useCallback(async () => {
-    if (!audioBlob || !onTranscribe) return;
-
-    setIsUploading(true);
-    try {
-      await onTranscribe(audioBlob);
-    } finally {
-      setIsUploading(false);
+    // Reset le flag quand on revient à idle
+    if (status === 'idle') {
+      hasAutoTranscribedRef.current = false;
     }
-  }, [audioBlob, onTranscribe]);
-
-  const progress = duration > 0 ? currentTime / duration : 0;
+  }, [status, audioBlob, onTranscribe]);
 
   return (
     <Card className={cn('w-full', className)}>
@@ -87,23 +53,6 @@ export function AudioRecorder({ onTranscribe, className }: AudioRecorderProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {status === 'stopped' && (
-          <>
-            <WaveformDisplay
-              data={waveformData}
-              progress={progress}
-              onClick={handleWaveformClick}
-              className={isAnalyzing ? 'animate-pulse' : ''}
-            />
-            <AudioTimeline
-              currentTime={currentTime}
-              duration={duration}
-              onSeek={handleSeek}
-              disabled={isPlaying}
-            />
-          </>
-        )}
-
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error.message}
@@ -112,17 +61,12 @@ export function AudioRecorder({ onTranscribe, className }: AudioRecorderProps) {
 
         <AudioControls
           status={status}
-          isPlaying={isPlaying}
           audioLevel={audioLevel}
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
           onPauseRecording={pauseRecording}
           onResumeRecording={resumeRecording}
-          onPlay={play}
-          onPause={pause}
           onReset={reset}
-          onTranscribe={handleTranscribe}
-          isUploading={isUploading}
         />
 
         {status === 'idle' && (

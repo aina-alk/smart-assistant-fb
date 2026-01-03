@@ -5,8 +5,6 @@
 // Audio & Recording
 export { AudioRecorder } from './audio-recorder';
 export { AudioControls } from './audio-controls';
-export { AudioTimeline } from './audio-timeline';
-export { WaveformDisplay } from './waveform-display';
 
 // Transcription
 export { TranscriptionDisplay } from './transcription-display';

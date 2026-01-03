@@ -1,23 +1,18 @@
 'use client';
 
-import { Mic, Square, Pause, Play, RotateCcw, Upload, Loader2 } from 'lucide-react';
+import { Mic, Square, Pause, Play, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { RecorderStatus } from '@/types/audio';
 
 interface AudioControlsProps {
   status: RecorderStatus;
-  isPlaying: boolean;
   audioLevel: number;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onPauseRecording: () => void;
   onResumeRecording: () => void;
-  onPlay: () => void;
-  onPause: () => void;
   onReset: () => void;
-  onTranscribe: () => void;
-  isUploading?: boolean;
   className?: string;
 }
 
@@ -43,17 +38,12 @@ function AudioLevelIndicator({ level }: { level: number }) {
 
 export function AudioControls({
   status,
-  isPlaying,
   audioLevel,
   onStartRecording,
   onStopRecording,
   onPauseRecording,
   onResumeRecording,
-  onPlay,
-  onPause,
   onReset,
-  onTranscribe,
-  isUploading = false,
   className,
 }: AudioControlsProps) {
   if (status === 'idle') {
@@ -110,43 +100,6 @@ export function AudioControls({
             Arrêter
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (status === 'stopped') {
-    return (
-      <div className={cn('flex flex-col gap-4', className)}>
-        <div className="flex justify-center gap-2">
-          {isPlaying ? (
-            <Button variant="outline" onClick={onPause} className="gap-2">
-              <Pause className="h-4 w-4" />
-              Pause
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={onPlay} className="gap-2">
-              <Play className="h-4 w-4" />
-              Écouter
-            </Button>
-          )}
-          <Button variant="ghost" onClick={onReset} className="gap-2">
-            <RotateCcw className="h-4 w-4" />
-            Recommencer
-          </Button>
-        </div>
-        <Button onClick={onTranscribe} disabled={isUploading} className="w-full gap-2">
-          {isUploading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Envoi en cours...
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4" />
-              Envoyer pour transcription
-            </>
-          )}
-        </Button>
       </div>
     );
   }
