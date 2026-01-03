@@ -46,8 +46,16 @@ export async function POST(
       );
     }
 
-    // 3. Vérifier le Content-Type avant de parser
+    // 3. Diagnostic complet de la requête
     const contentType = request.headers.get('content-type') || '';
+    const contentLength = request.headers.get('content-length') || '0';
+
+    console.error('[Transcription] Request diagnostics:', {
+      contentType: contentType.substring(0, 100),
+      contentLength,
+      method: request.method,
+      url: request.url,
+    });
 
     if (!contentType.includes('multipart/form-data')) {
       console.error('[Transcription] Invalid Content-Type:', contentType);
@@ -65,11 +73,25 @@ export async function POST(
     try {
       formData = await request.formData();
     } catch (parseError) {
-      console.error('[Transcription] FormData parse error:', parseError);
+      // Log détaillé de l'erreur
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      const errorStack = parseError instanceof Error ? parseError.stack : undefined;
+      console.error('[Transcription] FormData parse error:', {
+        message: errorMessage,
+        stack: errorStack,
+        contentType,
+        contentLength,
+      });
+
       return NextResponse.json(
         {
           error: 'Erreur de parsing FormData. Vérifiez que le fichier audio est valide.',
           code: 'INVALID_AUDIO',
+          debug: {
+            contentType: contentType.substring(0, 50),
+            contentLength,
+            parseError: errorMessage,
+          },
         },
         { status: 400 }
       );
