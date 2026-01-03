@@ -1,6 +1,5 @@
 # Documentation
 *.md
-!README.md
 docs/
 
 # Tests
@@ -13,6 +12,7 @@ coverage/
 .claude/
 .cursor/
 .husky/
+scripts/
 
 # IDE
 .vscode/
@@ -21,12 +21,34 @@ coverage/
 # Git
 .git/
 .gitignore
+.gitattributes
 
 # Local environment files
 .env.local
 .env.development
+.env.example
 
 # Firebase (separate deployment)
 functions/
 .firebase/
 dataconnect/
+firebase.json
+.firebaserc
+
+# Build artifacts not needed at runtime (standalone mode)
+.next/cache/
+src/
+
+# Config files not needed at runtime
+tsconfig.json
+tailwind.config.ts
+postcss.config.mjs
+next.config.ts
+eslint.config.mjs
+prettier.config.js
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# DataConnect generated (already bundled)
+src/dataconnect-generated/
+src/dataconnect-admin-generated/
