@@ -1,123 +1,14 @@
 /**
- * Rate Limiting avec Upstash Redis
+ * Rate Limiting avec Redis natif (ioredis)
  *
  * Protège les endpoints contre les abus et attaques DDoS.
- * Utilise un sliding window pour un contrôle précis.
+ * Utilise un sliding window avec ZSET pour un contrôle précis.
+ * Compatible Scalingo HDS avec ioredis natif.
  */
 
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
-import { RATE_LIMIT_CONFIG } from './config';
+import { getRedisClient, isRedisConfigured } from '@/lib/redis';
+import { RATE_LIMIT_CONFIG, type RateLimitType } from './config';
 
-// ============================================================================
-// CONFIGURATION REDIS
-// ============================================================================
-
-/**
- * Client Redis Upstash
- * Initialisé uniquement si les credentials sont disponibles
- */
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
-
-// ============================================================================
-// RATE LIMITERS
-// ============================================================================
-
-/**
- * Rate limiter pour les API générales
- * 100 requêtes par minute
- */
-export const apiRateLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(
-        RATE_LIMIT_CONFIG.api.maxRequests,
-        `${RATE_LIMIT_CONFIG.api.windowMs}ms`
-      ),
-      prefix: 'ratelimit:api',
-      analytics: true,
-    })
-  : null;
-
-/**
- * Rate limiter pour la génération IA (coûteux)
- * 10 requêtes par minute
- */
-export const generationRateLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(
-        RATE_LIMIT_CONFIG.generation.maxRequests,
-        `${RATE_LIMIT_CONFIG.generation.windowMs}ms`
-      ),
-      prefix: 'ratelimit:generation',
-      analytics: true,
-    })
-  : null;
-
-/**
- * Rate limiter pour la transcription
- * 5 requêtes par minute
- */
-export const transcriptionRateLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(
-        RATE_LIMIT_CONFIG.transcription.maxRequests,
-        `${RATE_LIMIT_CONFIG.transcription.windowMs}ms`
-      ),
-      prefix: 'ratelimit:transcription',
-      analytics: true,
-    })
-  : null;
-
-/**
- * Rate limiter pour l'authentification
- * 10 tentatives par 15 minutes
- */
-export const authRateLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(
-        RATE_LIMIT_CONFIG.auth.maxRequests,
-        `${RATE_LIMIT_CONFIG.auth.windowMs}ms`
-      ),
-      prefix: 'ratelimit:auth',
-      analytics: true,
-    })
-  : null;
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-export type RateLimitType = 'api' | 'generation' | 'transcription' | 'auth';
-
-/**
- * Sélectionne le rate limiter approprié selon le type
- */
-function getRateLimiter(type: RateLimitType): Ratelimit | null {
-  switch (type) {
-    case 'generation':
-      return generationRateLimiter;
-    case 'transcription':
-      return transcriptionRateLimiter;
-    case 'auth':
-      return authRateLimiter;
-    default:
-      return apiRateLimiter;
-  }
-}
-
-/**
- * Résultat du check de rate limiting
- */
 export interface RateLimitResult {
   success: boolean;
   limit: number;
@@ -125,8 +16,17 @@ export interface RateLimitResult {
   reset: number;
 }
 
+function generateRequestId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 /**
  * Vérifie si une requête est autorisée selon le rate limit
+ *
+ * Utilise un sliding window avec Redis ZSET pour un contrôle précis.
+ * En cas d'erreur Redis, le comportement dépend de RATE_LIMIT_FAIL_SECURE:
+ * - true: bloque les requêtes (sécurité maximale)
+ * - false: autorise les requêtes (disponibilité maximale)
  *
  * @param identifier - Identifiant unique (IP, userId, etc.)
  * @param type - Type de rate limit à appliquer
@@ -136,36 +36,102 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = 'api'
 ): Promise<RateLimitResult> {
-  const limiter = getRateLimiter(type);
+  const config = RATE_LIMIT_CONFIG[type];
+  const { maxRequests, windowMs } = config;
+  const windowSeconds = Math.ceil(windowMs / 1000);
+  const failSecure = process.env.RATE_LIMIT_FAIL_SECURE === 'true';
 
-  // Si pas de Redis configuré, autoriser toutes les requêtes
-  if (!limiter) {
-    const config = RATE_LIMIT_CONFIG[type];
+  // Si Redis n'est pas configuré
+  if (!isRedisConfigured()) {
+    if (failSecure) {
+      return {
+        success: false,
+        limit: maxRequests,
+        remaining: 0,
+        reset: Date.now() + windowMs,
+      };
+    }
     return {
       success: true,
-      limit: config.maxRequests,
-      remaining: config.maxRequests,
-      reset: Date.now() + config.windowMs,
+      limit: maxRequests,
+      remaining: maxRequests - 1,
+      reset: Date.now() + windowMs,
     };
   }
 
-  try {
-    const result = await limiter.limit(identifier);
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
-  } catch (error) {
-    // En cas d'erreur Redis, log et autoriser (fail-open)
-    console.error('[RateLimit] Redis error:', error);
-    const config = RATE_LIMIT_CONFIG[type];
+  const client = getRedisClient();
+  if (!client) {
+    if (failSecure) {
+      return {
+        success: false,
+        limit: maxRequests,
+        remaining: 0,
+        reset: Date.now() + windowMs,
+      };
+    }
     return {
       success: true,
-      limit: config.maxRequests,
-      remaining: config.maxRequests,
-      reset: Date.now() + config.windowMs,
+      limit: maxRequests,
+      remaining: maxRequests - 1,
+      reset: Date.now() + windowMs,
+    };
+  }
+
+  const key = `ratelimit:${type}:${identifier}`;
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  const requestId = generateRequestId();
+
+  try {
+    // Nettoyer les entrées expirées
+    await client.zremrangebyscore(key, 0, windowStart);
+
+    // Compter les requêtes dans la fenêtre
+    const currentCount = await client.zcard(key);
+
+    if (currentCount >= maxRequests) {
+      // Rate limit atteint
+      const oldestEntry = await client.zrange(key, 0, 0, 'WITHSCORES');
+      const resetTime =
+        oldestEntry.length >= 2 ? parseInt(oldestEntry[1], 10) + windowMs : now + windowMs;
+
+      return {
+        success: false,
+        limit: maxRequests,
+        remaining: 0,
+        reset: resetTime,
+      };
+    }
+
+    // Ajouter cette requête
+    await client.zadd(key, now, requestId);
+    await client.expire(key, windowSeconds);
+
+    return {
+      success: true,
+      limit: maxRequests,
+      remaining: maxRequests - currentCount - 1,
+      reset: now + windowMs,
+    };
+  } catch (error) {
+    console.error('[RateLimit] Redis error:', error);
+
+    // Fail-secure: bloquer en cas d'erreur Redis
+    if (failSecure) {
+      return {
+        success: false,
+        limit: maxRequests,
+        remaining: 0,
+        reset: Date.now() + windowMs,
+      };
+    }
+
+    // Fail-open: autoriser en cas d'erreur Redis
+    return {
+      success: true,
+      limit: maxRequests,
+      remaining: maxRequests - 1,
+      reset: Date.now() + windowMs,
     };
   }
 }
@@ -178,12 +144,16 @@ export function getRateLimitHeaders(result: RateLimitResult): Record<string, str
     'X-RateLimit-Limit': result.limit.toString(),
     'X-RateLimit-Remaining': result.remaining.toString(),
     'X-RateLimit-Reset': result.reset.toString(),
+    'Retry-After':
+      result.remaining <= 0 ? Math.ceil((result.reset - Date.now()) / 1000).toString() : '0',
   };
 }
 
 /**
- * Vérifie si Upstash est configuré
+ * Vérifie si le rate limiting est configuré
  */
 export function isRateLimitConfigured(): boolean {
-  return redis !== null;
+  return isRedisConfigured();
 }
+
+export { type RateLimitType } from './config';

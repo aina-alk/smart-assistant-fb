@@ -141,25 +141,31 @@ export const SECURITY_HEADERS = {
 // RATE LIMITING CONFIG
 // ============================================================================
 
-export const RATE_LIMIT_CONFIG = {
-  // Limites par endpoint
+export type RateLimitType = 'api' | 'auth' | 'generation' | 'transcription';
+
+export interface RateLimitConfig {
+  maxRequests: number;
+  windowMs: number;
+}
+
+export const RATE_LIMIT_CONFIG: Record<RateLimitType, RateLimitConfig> = {
   api: {
+    maxRequests: 100,
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100, // 100 req/min pour API générales
-  },
-  generation: {
-    windowMs: 60 * 1000,
-    maxRequests: 10, // 10 req/min pour génération IA (coûteux)
-  },
-  transcription: {
-    windowMs: 60 * 1000,
-    maxRequests: 5, // 5 req/min pour transcription
   },
   auth: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 30, // 30 tentatives login/15min (protège brute force sans bloquer usage normal)
+    windowMs: 15 * 60 * 1000, // 15 minutes
   },
-} as const;
+  generation: {
+    maxRequests: 10, // 10 req/min pour génération IA (coûteux)
+    windowMs: 60 * 1000,
+  },
+  transcription: {
+    maxRequests: 5, // 5 req/min pour transcription
+    windowMs: 60 * 1000,
+  },
+};
 
 // ============================================================================
 // PUBLIC PATHS (no auth required)

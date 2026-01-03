@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/Scalingo/scalingo.json/master/schema.json",
-  "name": "selav-medical",
+  "name": "selav-med-assist",
   "description": "Super Assistant Médical - Application certifiée HDS",
   "repository": "https://github.com/aina-alk/selav-scalingo",
   "stack": "scalingo-22",
