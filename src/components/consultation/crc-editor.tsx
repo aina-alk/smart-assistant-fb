@@ -49,14 +49,14 @@ const SECTIONS: SectionConfig[] = [
     field: 'motif',
     title: 'Motif de consultation',
     icon: <ClipboardList className="h-4 w-4" />,
-    required: true,
+    required: false,
     placeholder: 'Motif de la consultation...',
   },
   {
     field: 'histoire',
     title: 'Histoire de la maladie',
     icon: <FileText className="h-4 w-4" />,
-    required: true,
+    required: false,
     placeholder: 'Histoire de la maladie actuelle...',
   },
   {
@@ -70,14 +70,14 @@ const SECTIONS: SectionConfig[] = [
     field: 'diagnostic',
     title: 'Diagnostic',
     icon: <FileText className="h-4 w-4" />,
-    required: true,
+    required: false,
     placeholder: 'Diagnostic principal et secondaires...',
   },
   {
     field: 'conduite',
     title: 'Conduite à tenir',
     icon: <ClipboardList className="h-4 w-4" />,
-    required: true,
+    required: false,
     placeholder: 'Plan de traitement et suivi...',
   },
   {
@@ -164,7 +164,7 @@ export function CRCEditor({
     return JSON.stringify(crc) !== JSON.stringify(originalCRCRef.current);
   }, [crc]);
 
-  // Check validation errors
+  // Check validation errors (only conclusion is required)
   const getValidationErrors = useCallback(() => {
     if (!crc) return [];
     const errors: string[] = [];
@@ -176,11 +176,6 @@ export function CRCEditor({
         }
       }
     });
-    // Check examen (at least one field required)
-    const examenFilled = Object.values(crc.examen).some((v) => v && v.trim().length > 0);
-    if (!examenFilled) {
-      errors.push('Examen clinique');
-    }
     return errors;
   }, [crc]);
 
