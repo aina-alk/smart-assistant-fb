@@ -1,0 +1,5 @@
+# Scan for secrets before committing
+gitleaks protect --staged --verbose --redact
+
+# Run lint on staged files
+pnpm lint
