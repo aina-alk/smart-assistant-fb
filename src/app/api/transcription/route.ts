@@ -73,64 +73,50 @@ export async function POST(
       );
     }
 
-    // 4. Parser le FormData (avec fallback manuel si le parser natif échoue)
+    // 4. Parser le FormData avec parser manuel direct
+    // Note: Le parser natif Next.js 15 en mode standalone échoue systématiquement
+    // On utilise donc directement notre parser multipart manuel qui est plus fiable
     let audioFile: Blob | null = null;
 
-    // Diagnostics avant parsing
-    console.error('[Transcription] Pre-parse state:', {
-      bodyUsed: request.bodyUsed,
-      hasBody: !!request.body,
-    });
-
     try {
-      // Tentative 1: Parser natif Next.js
-      const formData = await request.formData();
-      const audio = formData.get('audio');
-      if (audio instanceof Blob) {
-        audioFile = audio;
-        console.error('[Transcription] Native FormData parser succeeded');
-      }
-    } catch (nativeError) {
-      // Le parser natif a échoué, utiliser le fallback manuel
-      const errorMessage = nativeError instanceof Error ? nativeError.message : String(nativeError);
-      console.error('[Transcription] Native FormData failed, trying manual parser:', errorMessage);
+      // Lire le body UNE SEULE FOIS en raw bytes
+      const rawBody = await request.arrayBuffer();
+      console.error('[Transcription] Raw body received, size:', rawBody.byteLength);
 
-      try {
-        // Tentative 2: Parser multipart manuel
-        // On doit refaire la requête car le body a peut-être été partiellement consommé
-        // Heureusement, Next.js clone la requête donc on peut réessayer
-        const rawBody = await request.clone().arrayBuffer();
-        console.error('[Transcription] Raw body size:', rawBody.byteLength);
-
-        const parsed = parseMultipartFormData(rawBody, contentType);
-        const audioFromParser = parsed.files.get('audio');
-
-        if (audioFromParser) {
-          audioFile = createBlobFromParsedFile(audioFromParser);
-          console.error(
-            '[Transcription] Manual multipart parser succeeded, audio size:',
-            audioFile.size
-          );
-        }
-      } catch (manualError) {
-        const manualErrorMessage =
-          manualError instanceof Error ? manualError.message : String(manualError);
-        console.error('[Transcription] Manual parser also failed:', manualErrorMessage);
-
+      if (rawBody.byteLength === 0) {
         return NextResponse.json(
           {
-            error: 'Erreur de parsing FormData. Vérifiez que le fichier audio est valide.',
+            error: 'Corps de requête vide.',
             code: 'INVALID_AUDIO',
-            debug: {
-              contentType: contentType.substring(0, 50),
-              contentLength,
-              nativeError: errorMessage,
-              manualError: manualErrorMessage,
-            },
           },
           { status: 400 }
         );
       }
+
+      // Parser manuellement le multipart/form-data
+      const parsed = parseMultipartFormData(rawBody, contentType);
+      const audioFromParser = parsed.files.get('audio');
+
+      if (audioFromParser) {
+        audioFile = createBlobFromParsedFile(audioFromParser);
+        console.error('[Transcription] Audio extracted successfully, size:', audioFile.size);
+      }
+    } catch (parseError) {
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      console.error('[Transcription] Multipart parsing failed:', errorMessage);
+
+      return NextResponse.json(
+        {
+          error: 'Erreur de parsing du fichier audio.',
+          code: 'INVALID_AUDIO',
+          debug: {
+            contentType: contentType.substring(0, 80),
+            contentLength,
+            parseError: errorMessage,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     if (!audioFile) {
