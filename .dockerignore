@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build output (will be rebuilt)
+.next
+out
+dist
+
+# Git
+.git
+.gitignore
+
+# Environment files (secrets injected by Scalingo)
+.env
+.env.*
+!.env.example
+
+# Development files
+.eslintcache
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Firebase Cloud Functions (separate deployment)
+functions/
+.firebase/
+firebase.json
+.firebaserc
+firestore.rules
+firestore.indexes.json
+dataconnect/
+
+# Documentation (not needed in production)
+*.md
+!README.md
+docs/
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+__tests__/
+coverage/
+
+# Claude Code config
+.claude/

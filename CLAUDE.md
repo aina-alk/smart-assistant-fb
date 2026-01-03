@@ -1,439 +1,387 @@
-# CLAUDE.md — Selav
+# CLAUDE.md — Super Assistant Médical
 
-## Contexte Projet
+> Configuration pour Claude Code — Mise en conformité HDS
 
-**Application** : Selav — Assistant IA pour chirurgiens ORL
-**Objectif** : Automatiser la documentation médicale (CRC, CRO, ordonnances, codage)
-**Cible** : Chirurgiens ORL (puis extensible autres spécialités)
-**Phase** : MVP 1.0 — Consultation Core
+## 🎯 Contexte du Projet
 
-### Proposition de Valeur
+Application médicale pour ORL (oto-rhino-laryngologie) permettant aux médecins de :
+- Générer des comptes-rendus de consultation (CRC) via transcription vocale + IA
+- Créer des comptes-rendus opératoires (CRO)
+- Gérer les ordonnances et bilans
+- Stocker les données patients en conformité FHIR
 
-> "Dictez pendant que vous examinez. L'IA rédige pendant que vous passez au patient suivant."
+### Objectif Actuel : Conformité HDS
+
+Migration vers un hébergement certifié HDS (Hébergeur de Données de Santé) avec :
+- **Anonymisation** des données avant envoi aux services non-HDS (Anthropic, AssemblyAI)
+- **Audit nominatif** de tous les accès FHIR
+- **Fail-secure** sur le rate-limiting
+- **Migration** Vercel → Scalingo HDS
 
 ---
 
-## Stack Technique
+## 📁 Structure du Projet
+
+```
+smart-assistant-fb/
+├── src/
+│   ├── app/
+│   │   ├── api/                    # Routes API Next.js
+│   │   │   ├── ordonnances/        # Génération ordonnances (Anthropic)
+│   │   │   ├── bilans/             # Génération bilans (Anthropic)
+│   │   │   ├── generation/crc/     # Génération CRC (Anthropic)
+│   │   │   ├── codage/suggest/     # Suggestion codes CCAM (Anthropic)
+│   │   │   └── transcription/      # Transcription audio (AssemblyAI)
+│   │   └── (pages)/                # Pages React
+│   ├── components/                 # Composants React
+│   ├── lib/
+│   │   ├── api/                    # Clients API
+│   │   │   ├── fhir-client.ts      # Client GCP Healthcare FHIR
+│   │   │   ├── claude-client.ts    # Client Anthropic
+│   │   │   └── auth-helpers.ts     # Helpers authentification
+│   │   ├── security/               # Sécurité
+│   │   │   ├── rate-limit.ts       # Rate limiting Redis
+│   │   │   └── config.ts           # Configuration CSP
+│   │   ├── anonymization/          # 🆕 Module anonymisation HDS
+│   │   │   ├── index.ts
+│   │   │   ├── types.ts
+│   │   │   ├── patterns.ts
+│   │   │   ├── anonymizer.ts
+│   │   │   ├── deanonymizer.ts
+│   │   │   └── helpers.ts
+│   │   ├── audit/                  # 🆕 Module audit FHIR
+│   │   │   ├── index.ts
+│   │   │   ├── types.ts
+│   │   │   └── fhir-audit.ts
+│   │   └── redis/                  # 🆕 Client Redis natif
+│   │       ├── index.ts
+│   │       └── client.ts
+│   └── types/                      # Types TypeScript
+├── docs/                           # Documentation
+├── scripts/                        # Scripts utilitaires
+├── Dockerfile                      # 🆕 Build Scalingo
+├── scalingo.json                   # 🆕 Config Scalingo
+└── Procfile                        # 🆕 Process Scalingo
+```
+
+---
+
+## 🛠 Stack Technique
 
 | Couche | Technologie | Version |
 |--------|-------------|---------|
-| Framework | Next.js (App Router) | 15.x |
-| UI Library | React | 19.x |
-| Langage | TypeScript (strict) | 5.x |
-| Styling | Tailwind CSS | 4.x |
-| Components | shadcn/ui | latest |
-| Data Fetching | TanStack Query | 5.x |
-| Forms | React Hook Form | 7.x |
-| Validation | Zod | 3.x |
-| State | Zustand | 5.x |
-| Auth | Firebase Auth | 10.x |
-| Patients Data | Google Healthcare API (FHIR R4) | v1 |
-| Analytics | BigQuery | - |
-| Transcription | AssemblyAI | - |
-| IA Génération | Claude API | claude-sonnet-4-20250514 |
-| Hébergement | Vercel | - |
+| Framework | Next.js | 15.x |
+| Runtime | React | 19.x |
+| Language | TypeScript | 5.x |
+| Auth | Firebase Auth | 13.x |
+| Database | GCP Healthcare FHIR | R4 |
+| Cache | Redis (ioredis) | — |
+| IA Text | Anthropic Claude | claude-sonnet-4-20250514 |
+| IA Audio | AssemblyAI | — |
+| Hosting | Scalingo (HDS) | — |
 
 ---
 
-## Architecture Projet
-
-```
-src/
-├── app/                        # Next.js App Router
-│   ├── (auth)/                 # Routes publiques (login)
-│   │   ├── login/page.tsx
-│   │   └── layout.tsx
-│   ├── (dashboard)/            # Routes protégées
-│   │   ├── layout.tsx          # Sidebar + AuthGuard
-│   │   ├── page.tsx            # Dashboard
-│   │   ├── patients/           # Gestion patients
-│   │   ├── consultation/       # Workflow consultation
-│   │   ├── tasks/              # Gestion tâches
-│   │   └── settings/           # Paramètres
-│   ├── api/                    # Route Handlers
-│   │   ├── patients/           # CRUD Patient FHIR
-│   │   ├── consultations/      # Encounters FHIR
-│   │   ├── transcription/      # WebSocket AssemblyAI
-│   │   ├── codage/             # NGAP/CCAM/CIM-10
-│   │   └── documents/          # PDF génération
-│   └── layout.tsx              # Root layout
-├── components/
-│   ├── ui/                     # shadcn/ui components
-│   ├── auth/                   # Firebase Auth components
-│   │   ├── auth-provider.tsx   # Context Firebase
-│   │   ├── auth-guard.tsx      # Protection routes
-│   │   ├── login-button.tsx    # Google Sign-in
-│   │   └── user-menu.tsx       # Menu utilisateur
-│   ├── layout/                 # Sidebar, Header, NavLinks
-│   ├── patients/               # Composants patients
-│   ├── consultation/           # Dictée, CRC, Transcription
-│   ├── ordonnance/             # Génération ordonnances
-│   └── shared/                 # Composants partagés
-├── lib/
-│   ├── firebase/               # Configuration Firebase
-│   │   ├── client.ts           # SDK Client (browser)
-│   │   ├── admin.ts            # Admin SDK (server)
-│   │   └── auth.ts             # Helpers auth
-│   ├── api/                    # Clients API externes
-│   │   ├── fhir-client.ts      # Google Healthcare API
-│   │   ├── bigquery-client.ts
-│   │   ├── assemblyai-client.ts
-│   │   └── claude-client.ts
-│   ├── hooks/                  # Custom hooks
-│   │   ├── use-auth.ts         # Firebase Auth
-│   │   ├── use-patient.ts
-│   │   ├── use-transcription.ts
-│   │   └── use-codage.ts
-│   ├── stores/                 # Zustand stores
-│   │   ├── auth-store.ts
-│   │   └── consultation-store.ts
-│   ├── validations/            # Zod schemas
-│   ├── prompts/                # Prompts Claude (CRC, CRO)
-│   └── constants/              # Codes NGAP, CCAM, CIM-10
-└── types/                      # Types TypeScript
-    ├── fhir.ts                 # Types FHIR R4
-    ├── auth.ts                 # Types Firebase Auth
-    └── consultation.ts         # Types métier
-```
-
----
-
-## Ressources FHIR
-
-### Entités Principales
-
-| Ressource | Usage | Stockage |
-|-----------|-------|----------|
-| Patient | Données administratives patient | FHIR Store |
-| Encounter | Consultation/Intervention | FHIR Store |
-| DocumentReference | Lien vers CRC/CRO PDF | FHIR Store |
-| Condition | Diagnostics CIM-10 | FHIR Store |
-| MedicationRequest | Ordonnances | FHIR Store |
-| Task | Tâches praticien | BigQuery |
-| Practitioner | Données praticien | BigQuery |
-
-### Structure Patient FHIR
-
-```typescript
-interface Patient {
-  resourceType: 'Patient';
-  id: string;
-  identifier: Array<{
-    system: 'urn:oid:1.2.250.1.213.1.4.8'; // NIR
-    value: string;
-  }>;
-  name: Array<{
-    use: 'official';
-    family: string;
-    given: string[];
-  }>;
-  gender: 'male' | 'female' | 'other' | 'unknown';
-  birthDate: string; // YYYY-MM-DD
-  telecom: Array<{
-    system: 'phone' | 'email';
-    value: string;
-  }>;
-}
-```
-
-### Opérations FHIR Courantes
-
-```typescript
-// CRUD
-POST /fhir/R4/Patient
-GET /fhir/R4/Patient/{id}
-PUT /fhir/R4/Patient/{id}
-DELETE /fhir/R4/Patient/{id}
-
-// Search
-GET /fhir/R4/Patient?name=Martin
-GET /fhir/R4/Patient?birthdate=1985-03-15
-GET /fhir/R4/Encounter?subject=Patient/{id}
-```
-
----
-
-## Services Externes
-
-### Firebase Auth
-
-```typescript
-// Client (browser)
-import { auth, googleProvider, signInWithPopup } from '@/lib/firebase/client';
-
-// Server (API routes)
-import { adminAuth, verifyIdToken } from '@/lib/firebase/admin';
-
-// Vérification token dans API route
-const decodedToken = await verifyIdToken(token);
-const userId = decodedToken.uid;
-```
-
-### AssemblyAI (Transcription)
-
-- WebSocket streaming pour transcription temps réel
-- Langue : français (fr)
-- Latence cible : < 2s
-- Précision cible : > 95%
-
-### Claude API (Génération)
-
-- Modèle : claude-sonnet-4-20250514
-- Contexte : Prompts ORL spécialisés dans `/lib/prompts/`
-- Outputs : CRC structuré, codage CIM-10, suggestions NGAP/CCAM
-
----
-
-## Variables d'Environnement
-
-```bash
-# Firebase Client (exposées au browser)
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-
-# Firebase Admin (secrets server)
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-
-# Google Cloud
-GOOGLE_CLOUD_PROJECT=
-GOOGLE_APPLICATION_CREDENTIALS=
-HEALTHCARE_DATASET_ID=
-HEALTHCARE_FHIR_STORE_ID=
-HEALTHCARE_LOCATION=europe-west1
-BIGQUERY_DATASET_ID=
-
-# Services IA
-ASSEMBLYAI_API_KEY=
-ANTHROPIC_API_KEY=
-
-# App
-NEXT_PUBLIC_APP_URL=
-```
-
----
-
-## Standards de Code
+## 📐 Conventions de Code
 
 ### TypeScript
 
-- Mode strict activé, éviter `any`
-- Utiliser Zod pour validation données externes
-- Types explicites pour fonctions publiques
-- Interfaces pour objets, types pour unions/primitives
-
-### Imports
-
 ```typescript
-// Ordre des imports
-1. React/Next.js
-2. Bibliothèques externes
-3. @/lib/* (utilitaires)
-4. @/components/* (composants)
-5. @/types/* (types)
-6. Imports relatifs (./*)
+// ✅ Imports organisés : externes, puis internes, puis types
+import { NextRequest, NextResponse } from 'next/server';
+import { anonymize, deanonymize } from '@/lib/anonymization';
+import type { PatientContext } from '@/types/generation';
 
-// Utiliser alias @/
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/hooks/use-auth';
-```
+// ✅ Types explicites pour les fonctions publiques
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ...
+}
 
-### Composants
+// ✅ Interfaces préfixées avec I pour les contrats
+export interface IAnonymizer {
+  anonymize(text: string): AnonymizationResult;
+}
 
-```typescript
-// Composants Server par défaut (RSC)
-// "use client" uniquement si nécessaire (hooks, événements)
-
-// Nommage
-components/patients/patient-card.tsx     // kebab-case fichiers
-export function PatientCard() {}         // PascalCase composants
-
-// Props
-interface PatientCardProps {
-  patient: Patient;
-  onSelect?: (id: string) => void;
+// ✅ Enums en PascalCase
+export enum SensitiveDataType {
+  NIR = 'NIR',
+  PHONE = 'PHONE',
 }
 ```
 
-### API Routes
+### Fichiers et Dossiers
+
+```
+# Fichiers
+kebab-case.ts           # Fichiers TypeScript
+PascalCase.tsx          # Composants React
+SCREAMING_SNAKE.md      # Documentation spéciale (CLAUDE.md, README.md)
+
+# Dossiers
+kebab-case/             # Dossiers de modules
+```
+
+### Gestion des Erreurs
 
 ```typescript
-// Pattern standard
-export async function GET(request: NextRequest) {
-  // 1. Vérifier auth
-  const token = request.headers.get('authorization')?.substring(7);
-  if (!token) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+// ✅ Erreurs typées avec codes
+export class AnonymizationError extends Error {
+  constructor(
+    message: string,
+    public code: AnonymizationErrorCode,
+    public details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'AnonymizationError';
+  }
+}
 
-  const decodedToken = await verifyIdToken(token);
-
-  // 2. Validation input
-  const { searchParams } = new URL(request.url);
-  const validated = schema.safeParse(Object.fromEntries(searchParams));
-
-  // 3. Logique métier
-  const data = await fetchData(validated.data);
-
-  // 4. Retour
-  return NextResponse.json(data);
+// ✅ Try-catch avec logging
+try {
+  const result = await riskyOperation();
+} catch (error) {
+  console.error('[Module] Operation failed:', error);
+  throw new CustomError('Operation failed', ErrorCode.OPERATION_FAILED);
 }
 ```
 
----
+### Logging
 
-## Règles Métier
-
-### Codage NGAP Consultation
-
-| Condition | Code | Tarif |
-|-----------|------|-------|
-| Consultation spécialiste | CS | 30,00 € |
-| Consultation complexe (> 30 min) | COE | 69,12 € |
-| Avis ponctuel consultant | APC | 55,00 € |
-
-### Association CCAM
-
-| Position | Tarif |
-|----------|-------|
-| Acte principal | 100% |
-| 2ème acte | 50% |
-| 3ème+ | 50% (sauf exceptions) |
-
-### Validation Patient
-
-| Champ | Règle |
-|-------|-------|
-| Nom/Prénom | 2-100 caractères, lettres/tirets/espaces |
-| DDN | Date passée, > 1900 |
-| NIR | 15 chiffres, clé valide |
-| Téléphone | Format FR (10 chiffres, 0...) |
-
----
-
-## Structure CRC
-
-```markdown
-## Compte-Rendu de Consultation
-
-### Motif de Consultation
-[Raison de la visite]
-
-### Antécédents
-[Antécédents pertinents]
-
-### Examen Clinique
-[Résultats examen ORL]
-
-### Examens Complémentaires
-[Résultats audiométrie, imagerie, etc.]
-
-### Conclusion
-[Diagnostic et synthèse]
-
-### Conduite à Tenir
-[Traitement, suivi]
-
-### Codage
-- CIM-10 : [code] — [libellé]
-- NGAP/CCAM : [codes]
+```typescript
+// Format : [Module] Message avec contexte
+console.log('[Anonymization] Tokens created:', count);
+console.warn('[RateLimit] Redis unavailable, using fail-secure');
+console.error('[FHIR] Request failed:', { resourceType, error });
 ```
 
 ---
 
-## Commandes Développement
+## 🔐 Patterns de Sécurité HDS
+
+### Pattern 1 : Anonymisation avant appel IA
+
+```typescript
+import { anonymize, deanonymize } from '@/lib/anonymization';
+
+// AVANT envoi à Anthropic/AssemblyAI
+const { anonymizedText, context } = anonymize(patientData);
+
+// Appel au service non-HDS avec données anonymisées
+const aiResponse = await anthropic.messages.create({
+  messages: [{ role: 'user', content: anonymizedText }],
+});
+
+// APRÈS réception, restaurer les données
+const { originalText } = deanonymize(aiResponse.text, context);
+```
+
+### Pattern 2 : Audit FHIR nominatif
+
+```typescript
+import { createAuditedFHIRClient } from '@/lib/audit';
+
+// Créer un client audité avec le contexte utilisateur
+const fhirClient = createAuditedFHIRClient({
+  userId: authResult.uid,
+  userEmail: authResult.email,
+  ipAddress: request.headers.get('x-forwarded-for'),
+  userAgent: request.headers.get('user-agent'),
+});
+
+// Toutes les opérations sont automatiquement loggées
+await fhirClient.create('Patient', patientData);
+```
+
+### Pattern 3 : Rate-limit fail-secure
+
+```typescript
+import { checkRateLimit } from '@/lib/security/rate-limit';
+
+const rateLimitResult = await checkRateLimit(identifier, 'api');
+
+// En cas d'erreur Redis, success = false (fail-secure)
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    { error: 'Rate limit exceeded or service unavailable' },
+    { status: 429 }
+  );
+}
+```
+
+### Pattern 4 : Vérification auth enrichie
+
+```typescript
+import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
+
+const authResult = await verifyMedecinAccess(request);
+if (!authResult.authorized) {
+  return NextResponse.json({ error: authResult.error }, { status: 401 });
+}
+
+// authResult contient maintenant userId et userEmail pour l'audit
+console.log('[API] Request from:', authResult.userEmail);
+```
+
+---
+
+## 📋 Blocs de Travail
+
+Les prompts d'implémentation sont dans `/prompts-hds-conformite/` :
+
+| Bloc | Fichier | Description |
+|------|---------|-------------|
+| 0.1 | `bloc-0.1-nextjs-standalone-dockerfile.md` | Dockerfile Scalingo |
+| 0.2 | `bloc-0.2-config-scalingo.md` | scalingo.json, Procfile |
+| 0.3 | `bloc-0.3-migration-redis-ioredis.md` | Migration Upstash → ioredis |
+| 0.4 | `bloc-0.4-env-variables-scripts.md` | Variables env et scripts |
+| 1.1 | `bloc-1.1-types-anonymisation.md` | Types anonymisation |
+| 1.2 | `bloc-1.2-patterns-detection.md` | Regex de détection |
+| 1.3 | `bloc-1.3-service-anonymizer.md` | Service Anonymizer |
+| 1.4 | `bloc-1.4-deanonymizer-export.md` | Deanonymizer + exports |
+| 2.1 | `bloc-2.1-route-ordonnances.md` | Route /api/ordonnances |
+| 2.2 | `bloc-2.2-route-bilans.md` | Route /api/bilans |
+| 2.3 | `bloc-2.3-route-generation-crc.md` | Route /api/generation/crc |
+| 2.4 | `bloc-2.4-route-codage-suggest.md` | Route /api/codage/suggest |
+| 2.5 | `bloc-2.5-route-transcription.md` | Route /api/transcription |
+| 3.1 | `bloc-3.1-types-audit.md` | Types audit FHIR |
+| 3.2 | `bloc-3.2-fhir-client-audit.md` | Wrapper FHIR audité |
+| 3.3 | `bloc-3.3-auth-helpers-enrichi.md` | Auth helpers enrichis |
+| 4.1 | `bloc-4.1-rate-limit-fail-secure.md` | Rate-limit fail-secure |
+| 4.2 | `bloc-4.2-documentation-csp.md` | Documentation CSP |
+| 5.1 | `bloc-5.1-documentation-pra-pca.md` | PRA/PCA |
+| 5.2 | `bloc-5.2-readme-checklist-deploiement.md` | README et checklist |
+
+### Ordre d'exécution recommandé
+
+```
+1.1 → 1.2 → 1.3 → 1.4  (Anonymisation - fondation)
+  ↓
+2.1 → 2.2 → 2.3 → 2.4 → 2.5  (Routes API)
+  ↓
+0.1 → 0.2 → 0.3 → 0.4  (Infrastructure Scalingo)
+  ↓
+4.1  (Rate-limit fail-secure)
+  ↓
+3.1 → 3.2 → 3.3  (Audit FHIR)
+  ↓
+4.2 → 5.1 → 5.2  (Documentation)
+```
+
+---
+
+## 🧪 Commandes Utiles
 
 ```bash
-# Installation
-pnpm install
-
 # Développement
-pnpm dev
-
-# Build
-pnpm build
-
-# Lint + Type check
-pnpm lint
-pnpm typecheck
+pnpm dev                    # Lancer en mode dev
+pnpm build                  # Build production
+pnpm tsc --noEmit           # Vérifier TypeScript
 
 # Tests
-pnpm test
+pnpm check-env              # Vérifier variables d'environnement
+pnpm lint                   # Linter ESLint
 
-# Firebase local
-firebase emulators:start --only auth
+# Docker (tests locaux)
+pnpm docker:build           # Build image Docker
+pnpm docker:run             # Run container local
+
+# Déploiement Scalingo
+pnpm deploy                 # Déployer sur Scalingo
+
+# Redis local (pour tests)
+docker run -d -p 6379:6379 --name redis-test redis:alpine
+export REDIS_URL=redis://localhost:6379
 ```
 
 ---
 
-## Workflows Critiques
+## 🌍 Variables d'Environnement
 
-### 1. Dictée → CRC
+### Obligatoires
 
+```bash
+# Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
+
+# GCP Healthcare FHIR
+GOOGLE_CLOUD_PROJECT=
+HEALTHCARE_DATASET_ID=
+HEALTHCARE_FHIR_STORE_ID=
+HEALTHCARE_LOCATION=europe-west1
+GOOGLE_APPLICATION_CREDENTIALS_JSON=
+
+# Services IA
+ANTHROPIC_API_KEY=
+ASSEMBLYAI_API_KEY=
+
+# Email
+RESEND_API_KEY=
+
+# Sécurité
+RATE_LIMIT_FAIL_SECURE=true
 ```
-Micro → AssemblyAI WebSocket → Transcription temps réel
-                ↓
-Transcription → Claude API → CRC structuré
-                ↓
-CRC → Codage auto (CIM-10, NGAP/CCAM)
-                ↓
-Validation praticien → FHIR Store (Encounter, DocumentReference)
-```
 
-### 2. Authentification
+### Auto-injectées (Scalingo)
 
-```
-Client → Firebase SDK → Google OAuth
-              ↓
-Firebase → ID Token (JWT)
-              ↓
-API Route → Admin SDK → Verify Token
-              ↓
-Authorized → Google Healthcare API
+```bash
+PORT=                       # Port d'écoute
+SCALINGO_REDIS_URL=         # URL Redis (via addon)
 ```
 
 ---
 
-## Performance
+## ⚠️ Points d'Attention
 
-| Métrique | Cible |
-|----------|-------|
-| TTFB | < 200ms |
-| LCP | < 2.5s |
-| Latence API (p95) | < 500ms |
-| Transcription | < 2s |
-| Génération CRC | < 30s |
+### Données sensibles à anonymiser
 
----
+| Type | Pattern | Exemple |
+|------|---------|---------|
+| NIR | 15 chiffres | 1 85 12 75 108 123 45 |
+| Téléphone | +33/06... | 06 12 34 56 78 |
+| Email | xxx@xxx.xx | patient@email.com |
+| Date naissance | JJ/MM/AAAA | 15/03/1985 |
+| Nom | Contexte M./Mme | M. DUPONT |
+| Adresse | N° + voie | 42 rue de la Paix |
 
-## Sécurité
+### Ne JAMAIS
 
-- **Tokens** : ID Token Firebase (httpOnly si SSR)
-- **Secrets** : Variables d'environnement, jamais en dur
-- **FHIR** : Authentification Service Account avec IAM
-- **Données médicales** : Anonymisation en logs, pas de PHI en clair
-- **Session** : Refresh automatique Firebase SDK
+- ❌ Logger le contexte d'anonymisation (contient les données originales)
+- ❌ Envoyer des données non anonymisées à Anthropic/AssemblyAI
+- ❌ Stocker des tokens d'anonymisation (mémoire uniquement)
+- ❌ Désactiver le fail-secure en production
+- ❌ Créer des opérations FHIR sans audit
 
----
+### Toujours
 
-## Conformité
-
-| Exigence | Statut MVP |
-|----------|------------|
-| RGPD | Base légale : exécution contrat de soin |
-| Stockage EU | Google europe-west1 |
-| HDS | Phase 2 (migration hébergeur certifié) |
-| Audit | Logs actions sur données patient |
+- ✅ Anonymiser AVANT tout appel à un service non-HDS
+- ✅ Dé-anonymiser APRÈS réception de la réponse IA
+- ✅ Inclure userId et userEmail dans les logs d'audit
+- ✅ Valider l'authentification sur toutes les routes API
+- ✅ Utiliser HTTPS uniquement
 
 ---
 
-## Références
+## 📚 Documentation
 
-- [PRD v2.2](.claude/prd-super-assistant-medical-v2.2.md)
-- [Cahier des Charges v1.1](.claude/cahier-des-charges-technique-v1.1.md)
-- [Firebase Auth](https://firebase.google.com/docs/auth)
-- [Google Healthcare API](https://cloud.google.com/healthcare-api/docs/concepts/fhir)
-- [FHIR R4](https://hl7.org/fhir/R4/)
+- [Plan de Reprise/Continuité](./docs/pra-pca.md)
+- [Configuration Scalingo](./docs/scalingo-setup.md)
+- [Checklist Déploiement](./docs/deployment-checklist.md)
+- [Playbook FHIR](./docs/fhir-playbook.md)
+
+---
+
+## 🔗 Ressources Externes
+
+- [Scalingo Documentation](https://doc.scalingo.com)
+- [GCP Healthcare API](https://cloud.google.com/healthcare-api/docs)
+- [Référentiel HDS](https://esante.gouv.fr/produits-services/hds)
+- [FHIR R4 Specification](https://hl7.org/fhir/R4/)
+- [Anthropic API](https://docs.anthropic.com)
+
+---
+
+*Dernière mise à jour : Janvier 2025 — Conformité HDS v1.0*
