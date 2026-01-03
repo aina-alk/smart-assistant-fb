@@ -1,7 +1,7 @@
 # PROGRESS-HDS.md — Tableau de Bord Conformité HDS
 
 > **Objectif** : Migration vers hébergement certifié HDS avec anonymisation, audit nominatif et fail-secure
-> **Dernière mise à jour** : 3 janvier 2026 — Déploiement Scalingo réussi
+> **Dernière mise à jour** : 3 janvier 2025 — Module anonymisation terminé (Bloc 1)
 
 ---
 
@@ -12,13 +12,13 @@
 │                    CONFORMITÉ HDS — 20 BLOCS                           │
 ├────────────────────────────────────────────────────────────────────────┤
 │  Bloc 0 : Infrastructure Scalingo        ████████████  4/4   (100%)   │
-│  Bloc 1 : Module Anonymisation           ░░░░░░░░░░░░  0/4   (0%)     │
+│  Bloc 1 : Module Anonymisation           ████████████  4/4   (100%)   │
 │  Bloc 2 : Intégration Routes API         ░░░░░░░░░░░░  0/5   (0%)     │
 │  Bloc 3 : Audit FHIR Nominatif           ░░░░░░░░░░░░  0/3   (0%)     │
 │  Bloc 4 : Sécurité                       ░░░░░░░░░░░░  0/2   (0%)     │
 │  Bloc 5 : Documentation                  ░░░░░░░░░░░░  0/2   (0%)     │
 ├────────────────────────────────────────────────────────────────────────┤
-│  TOTAL                                   ████░░░░░░░░  4/20  (20%)    │
+│  TOTAL                                   ████████░░░░  8/20  (40%)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -44,10 +44,10 @@
 
 | #   | Bloc                  | Description                       | Status     | Fichiers créés                                      |
 | --- | --------------------- | --------------------------------- | ---------- | --------------------------------------------------- |
-| 1.1 | `types-anonymisation` | Types et interfaces TypeScript    | ⬜ À faire | `src/lib/anonymization/types.ts`                    |
-| 1.2 | `patterns-detection`  | Regex NIR, téléphone, email, etc. | ⬜ À faire | `src/lib/anonymization/patterns.ts`                 |
-| 1.3 | `service-anonymizer`  | Classe Anonymizer principale      | ⬜ À faire | `src/lib/anonymization/anonymizer.ts`               |
-| 1.4 | `deanonymizer-export` | Deanonymizer + index.ts           | ⬜ À faire | `src/lib/anonymization/deanonymizer.ts`, `index.ts` |
+| 1.1 | `types-anonymisation` | Types et interfaces TypeScript    | ✅ Fait    | `src/lib/anonymization/types.ts`                    |
+| 1.2 | `patterns-detection`  | Regex NIR, téléphone, email, etc. | ✅ Fait    | `src/lib/anonymization/patterns.ts`                 |
+| 1.3 | `service-anonymizer`  | Classe Anonymizer principale      | ✅ Fait    | `src/lib/anonymization/anonymizer.ts`               |
+| 1.4 | `deanonymizer-export` | Deanonymizer + index.ts           | ✅ Fait    | `src/lib/anonymization/deanonymizer.ts`, `index.ts` |
 
 **Dépendances** : Aucune (bloc fondation)
 **Livrable** : Module `@/lib/anonymization` exportant `anonymize()` et `deanonymize()`
@@ -149,11 +149,16 @@ src/lib/
 │   ├── claude-client.ts      ← À modifier pour anonymisation (bloc 2.3)
 │   ├── auth-helpers.ts       ← À enrichir avec userEmail (bloc 3.3)
 │   └── assemblyai-client.ts  ← Référence pour bloc 2.5
-├── security/                  ← À créer
-│   └── rate-limit.ts         ← À créer (bloc 4.1)
-├── anonymization/             ← À créer (bloc 1.x)
+├── security/                  ✅ Créé (bloc 0.3)
+│   └── rate-limit.ts         ← À modifier fail-secure (bloc 4.1)
+├── anonymization/             ✅ Créé (bloc 1.x)
+│   ├── types.ts              ✅ Types et interfaces
+│   ├── patterns.ts           ✅ Regex de détection
+│   ├── anonymizer.ts         ✅ Service Anonymizer
+│   ├── deanonymizer.ts       ✅ Service Deanonymizer
+│   └── index.ts              ✅ Exports consolidés
 ├── audit/                     ← À créer (bloc 3.x)
-└── redis/                     ← À créer (bloc 0.3)
+└── redis/                     ✅ Créé (bloc 0.3)
 ```
 
 ### Routes API existantes
@@ -250,7 +255,32 @@ src/app/api/
   - Correction `Procfile` (chemin `.next/standalone/server.js`)
   - ✅ **Déployé et fonctionnel** : https://selav-med-assist.osc-fr1.scalingo.io
   - Health check répond (warning: variables env non configurées)
-- [ ] **Prochain bloc** : 1.1 (Types anonymisation) — Bloc 0 Infrastructure terminé!
+- [x] **Bloc 1 terminé** — Infrastructure Scalingo opérationnelle
+
+### 3 janvier 2025 — Session 3
+
+- [x] **Bloc 1.1** : Types et interfaces d'anonymisation
+  - Création `src/lib/anonymization/types.ts`
+  - Enum `SensitiveDataType` (NIR, PHONE, EMAIL, BIRTH_DATE, NAME, ADDRESS, POSTAL_CODE)
+  - Interfaces `AnonymizationContext`, `AnonymizationResult`, `DeanonymizationResult`
+  - Classe `AnonymizationError` avec codes d'erreur
+- [x] **Bloc 1.2** : Patterns de détection regex
+  - Création `src/lib/anonymization/patterns.ts`
+  - Regex pour NIR (avec clé de contrôle), téléphones français, emails
+  - Regex pour dates (FR et ISO), adresses postales, noms propres
+  - Fonctions de validation : `validateNIR()`, `validatePhone()`, `validateDate()`
+- [x] **Bloc 1.3** : Service Anonymizer
+  - Création `src/lib/anonymization/anonymizer.ts`
+  - Classe `Anonymizer` avec tokenisation UUID-based
+  - Singleton `anonymizer` et fonction `anonymize()`
+  - Ajout dépendance `uuid@13.0.0`
+- [x] **Bloc 1.4** : Service Deanonymizer + exports
+  - Création `src/lib/anonymization/deanonymizer.ts`
+  - Création `src/lib/anonymization/index.ts`
+  - Fonction `withAnonymization()` pour wrapper async
+  - TypeScript ✅ | ESLint ✅
+- [x] **PR créée** : https://github.com/aina-alk/smart-assistant-fb/pull/2
+- [ ] **Prochain bloc** : 2.1 (Route ordonnances) — Bloc 1 Anonymisation terminé!
 
 ---
 
