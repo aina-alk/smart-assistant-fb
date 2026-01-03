@@ -203,23 +203,47 @@ export class AssemblyAIClient {
 }
 
 /**
- * Factory pour créer une instance du client AssemblyAI
+ * Cache pour l'instance du client AssemblyAI
  */
-function createAssemblyAIClient(): AssemblyAIClient | null {
+let cachedClient: AssemblyAIClient | null = null;
+let clientInitialized = false;
+
+/**
+ * Factory pour créer ou récupérer l'instance du client AssemblyAI
+ * Utilise une initialisation lazy pour permettre le chargement des env vars après le démarrage
+ */
+function getAssemblyAIClient(): AssemblyAIClient | null {
+  // Si déjà initialisé avec succès, retourner le client caché
+  if (clientInitialized && cachedClient) {
+    return cachedClient;
+  }
+
   const apiKey = process.env.ASSEMBLYAI_API_KEY;
 
   if (!apiKey) {
-    console.warn(
-      'AssemblyAI client not configured: missing ASSEMBLYAI_API_KEY environment variable'
-    );
+    // Ne logger l'avertissement qu'une fois
+    if (!clientInitialized) {
+      console.warn(
+        '[AssemblyAI] Client not configured: missing ASSEMBLYAI_API_KEY environment variable'
+      );
+      clientInitialized = true;
+    }
     return null;
   }
 
-  return new AssemblyAIClient(apiKey);
+  // Créer et cacher le client
+  cachedClient = new AssemblyAIClient(apiKey);
+  clientInitialized = true;
+
+  return cachedClient;
 }
 
 /**
- * Singleton instance du client AssemblyAI
- * Peut être null si la variable d'environnement n'est pas configurée
+ * Getter pour l'instance du client AssemblyAI
+ * Utilise une initialisation lazy - peut être null si la variable d'environnement n'est pas configurée
  */
-export const assemblyAIClient = createAssemblyAIClient();
+export const assemblyAIClient = {
+  get instance(): AssemblyAIClient | null {
+    return getAssemblyAIClient();
+  },
+};

@@ -24,10 +24,24 @@ export async function POST(
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    // 2. Vérifier que le client AssemblyAI est configuré
-    if (!assemblyAIClient) {
+    // 2. Vérifier que le client AssemblyAI est configuré (initialisation lazy)
+    const client = assemblyAIClient.instance;
+    if (!client) {
+      // Diagnostic: vérifier l'état de la variable d'environnement
+      const envKeyExists = !!process.env.ASSEMBLYAI_API_KEY;
+      const envKeyLength = process.env.ASSEMBLYAI_API_KEY?.length ?? 0;
+      console.error('[Transcription] AssemblyAI not configured:', {
+        envKeyExists,
+        envKeyLength,
+        nodeEnv: process.env.NODE_ENV,
+      });
+
       return NextResponse.json(
-        { error: 'Service de transcription non configuré', code: 'TRANSCRIPTION_FAILED' },
+        {
+          error: 'Service de transcription non configuré',
+          code: 'TRANSCRIPTION_FAILED',
+          debug: { envKeyExists, envKeyLength },
+        },
         { status: 503 }
       );
     }
@@ -108,7 +122,7 @@ export async function POST(
     const arrayBuffer = await audioFile.arrayBuffer();
 
     // 8. Upload et démarrer la transcription
-    const transcriptId = await assemblyAIClient.uploadAndTranscribe(arrayBuffer);
+    const transcriptId = await client.uploadAndTranscribe(arrayBuffer);
 
     // 9. Retourner l'ID pour polling
     return NextResponse.json(

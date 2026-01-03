@@ -36,8 +36,9 @@ export async function GET(
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    // 2. Vérifier que le client AssemblyAI est configuré
-    if (!assemblyAIClient) {
+    // 2. Vérifier que le client AssemblyAI est configuré (initialisation lazy)
+    const client = assemblyAIClient.instance;
+    if (!client) {
       return NextResponse.json(
         { error: 'Service de transcription non configuré', code: 'TRANSCRIPTION_FAILED' },
         { status: 503 }
@@ -55,7 +56,7 @@ export async function GET(
     }
 
     // 4. Récupérer le statut de la transcription
-    const result = await assemblyAIClient.getTranscript(transcriptId);
+    const result = await client.getTranscript(transcriptId);
 
     // 5. Retourner le résultat
     return NextResponse.json({ result }, { status: 200 });
