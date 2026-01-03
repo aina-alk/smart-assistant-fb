@@ -32,13 +32,31 @@ export async function POST(
       );
     }
 
-    // 3. Parser le FormData
+    // 3. Vérifier le Content-Type avant de parser
+    const contentType = request.headers.get('content-type') || '';
+
+    if (!contentType.includes('multipart/form-data')) {
+      console.error('[Transcription] Invalid Content-Type:', contentType);
+      return NextResponse.json(
+        {
+          error: `Content-Type invalide: ${contentType || 'absent'}. Attendu: multipart/form-data.`,
+          code: 'INVALID_AUDIO',
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Parser le FormData
     let formData: FormData;
     try {
       formData = await request.formData();
-    } catch {
+    } catch (parseError) {
+      console.error('[Transcription] FormData parse error:', parseError);
       return NextResponse.json(
-        { error: 'Format de requête invalide. Utilisez FormData.', code: 'INVALID_AUDIO' },
+        {
+          error: 'Erreur de parsing FormData. Vérifiez que le fichier audio est valide.',
+          code: 'INVALID_AUDIO',
+        },
         { status: 400 }
       );
     }
@@ -52,7 +70,7 @@ export async function POST(
       );
     }
 
-    // 4. Valider la taille du fichier
+    // 5. Valider la taille du fichier
     if (audioFile.size > ASSEMBLYAI_LIMITS.RECOMMENDED_MAX_SIZE_BYTES) {
       const maxSizeMB = ASSEMBLYAI_LIMITS.RECOMMENDED_MAX_SIZE_BYTES / (1024 * 1024);
       return NextResponse.json(
@@ -71,7 +89,7 @@ export async function POST(
       );
     }
 
-    // 5. Valider le type MIME (si disponible)
+    // 6. Valider le type MIME (si disponible)
     const mimeType = audioFile.type;
     if (
       mimeType &&
@@ -86,13 +104,13 @@ export async function POST(
       );
     }
 
-    // 6. Convertir le Blob en Buffer pour l'upload
+    // 7. Convertir le Blob en Buffer pour l'upload
     const arrayBuffer = await audioFile.arrayBuffer();
 
-    // 7. Upload et démarrer la transcription
+    // 8. Upload et démarrer la transcription
     const transcriptId = await assemblyAIClient.uploadAndTranscribe(arrayBuffer);
 
-    // 8. Retourner l'ID pour polling
+    // 9. Retourner l'ID pour polling
     return NextResponse.json(
       {
         transcriptId,
