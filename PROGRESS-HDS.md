@@ -11,14 +11,14 @@
 ┌────────────────────────────────────────────────────────────────────────┐
 │                    CONFORMITÉ HDS — 20 BLOCS                           │
 ├────────────────────────────────────────────────────────────────────────┤
-│  Bloc 0 : Infrastructure Scalingo        █████████░░░  3/4   (75%)    │
+│  Bloc 0 : Infrastructure Scalingo        ████████████  4/4   (100%)   │
 │  Bloc 1 : Module Anonymisation           ░░░░░░░░░░░░  0/4   (0%)     │
 │  Bloc 2 : Intégration Routes API         ░░░░░░░░░░░░  0/5   (0%)     │
 │  Bloc 3 : Audit FHIR Nominatif           ░░░░░░░░░░░░  0/3   (0%)     │
 │  Bloc 4 : Sécurité                       ░░░░░░░░░░░░  0/2   (0%)     │
 │  Bloc 5 : Documentation                  ░░░░░░░░░░░░  0/2   (0%)     │
 ├────────────────────────────────────────────────────────────────────────┤
-│  TOTAL                                   ███░░░░░░░░░  3/20  (15%)    │
+│  TOTAL                                   ████░░░░░░░░  4/20  (20%)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,7 +33,7 @@
 | 0.1 | `nextjs-standalone-dockerfile` | Dockerfile multi-stage optimisé | ✅ Fait   | `Dockerfile`, `.dockerignore`  |
 | 0.2 | `config-scalingo`              | scalingo.json + Procfile        | ✅ Fait   | `scalingo.json`, `Procfile`, `.slugignore` |
 | 0.3 | `migration-redis-ioredis`      | Upstash → ioredis natif         | ✅ Fait   | `src/lib/redis/`, `src/lib/security/` |
-| 0.4 | `env-variables-scripts`        | Variables env + scripts npm     | ⬜ À faire | `.env.example`, `package.json` |
+| 0.4 | `env-variables-scripts`        | Variables env + scripts npm     | ✅ Fait   | `.env.example`, `scripts/`, `docs/scalingo-setup.md` |
 
 **Dépendances** : Aucune (peut démarrer en parallèle)
 **Livrable** : Build Docker fonctionnel, déployable sur Scalingo
@@ -234,7 +234,14 @@ src/app/api/
   - Création `src/lib/security/rate-limit.ts` (sliding window ZSET)
   - Création `src/lib/security/index.ts` (exports)
   - TypeScript ✅ | ESLint ✅
-- [ ] **Prochain bloc** : 0.4 (Variables env) ou 1.1 (Types anonymisation)
+- [x] **Bloc 0.4** : Variables env + scripts
+  - Mise à jour `.env.example` (Redis, Scalingo, sécurité)
+  - Création `scripts/check-env.sh` (vérification variables)
+  - Création `scripts/deploy-scalingo.sh` (déploiement)
+  - Création `docs/scalingo-setup.md` (guide configuration)
+  - Ajout scripts npm : `check-env`, `deploy`
+  - TypeScript ✅ | ESLint ✅
+- [ ] **Prochain bloc** : 1.1 (Types anonymisation) — Bloc 0 Infrastructure terminé!
 
 ---
 

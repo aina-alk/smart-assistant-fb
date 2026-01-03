@@ -10,6 +10,8 @@
     "start:scalingo": "node server.js",
     "lint": "next lint",
     "format": "prettier --write .",
+    "check-env": "bash scripts/check-env.sh",
+    "deploy": "bash scripts/deploy-scalingo.sh",
     "docker:build": "docker build -t selav-med-assist .",
     "docker:run": "docker run -p 3000:3000 --env-file .env.local selav-med-assist"
   },
