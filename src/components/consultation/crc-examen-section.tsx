@@ -252,10 +252,16 @@ export function CRCExamenSection({
       )}
     >
       {/* Header */}
-      <button
-        type="button"
+      <div
+        role={onToggle ? 'button' : undefined}
+        tabIndex={onToggle ? 0 : undefined}
         onClick={onToggle}
-        disabled={!onToggle}
+        onKeyDown={(e) => {
+          if (onToggle && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
         className={cn(
           'flex w-full items-center justify-between p-3 text-left',
           onToggle && 'hover:bg-muted/50 transition-colors cursor-pointer',
@@ -299,7 +305,7 @@ export function CRCExamenSection({
             </Button>
           )}
         </div>
-      </button>
+      </div>
 
       {/* Sub-sections */}
       {expanded && (
