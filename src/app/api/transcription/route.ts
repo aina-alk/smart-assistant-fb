@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { assemblyAIClient, AssemblyAIError } from '@/lib/api/assemblyai-client';
 import { verifyMedecinAccess } from '@/lib/api/auth-helpers';
 import { ASSEMBLYAI_LIMITS, SUPPORTED_AUDIO_TYPES } from '@/lib/constants/assemblyai';
+import { parseMultipartFormData, createBlobFromParsedFile } from '@/lib/utils/multipart-parser';
 import type { StartTranscriptionResponse, TranscriptionErrorResponse } from '@/types/transcription';
 
 /**
@@ -72,38 +73,67 @@ export async function POST(
       );
     }
 
-    // 4. Parser le FormData
-    let formData: FormData;
-    try {
-      formData = await request.formData();
-    } catch (parseError) {
-      // Log détaillé de l'erreur
-      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
-      const errorStack = parseError instanceof Error ? parseError.stack : undefined;
-      console.error('[Transcription] FormData parse error:', {
-        message: errorMessage,
-        stack: errorStack,
-        contentType,
-        contentLength,
-      });
+    // 4. Parser le FormData (avec fallback manuel si le parser natif échoue)
+    let audioFile: Blob | null = null;
 
-      return NextResponse.json(
-        {
-          error: 'Erreur de parsing FormData. Vérifiez que le fichier audio est valide.',
-          code: 'INVALID_AUDIO',
-          debug: {
-            contentType: contentType.substring(0, 50),
-            contentLength,
-            parseError: errorMessage,
+    // Diagnostics avant parsing
+    console.error('[Transcription] Pre-parse state:', {
+      bodyUsed: request.bodyUsed,
+      hasBody: !!request.body,
+    });
+
+    try {
+      // Tentative 1: Parser natif Next.js
+      const formData = await request.formData();
+      const audio = formData.get('audio');
+      if (audio instanceof Blob) {
+        audioFile = audio;
+        console.error('[Transcription] Native FormData parser succeeded');
+      }
+    } catch (nativeError) {
+      // Le parser natif a échoué, utiliser le fallback manuel
+      const errorMessage = nativeError instanceof Error ? nativeError.message : String(nativeError);
+      console.error('[Transcription] Native FormData failed, trying manual parser:', errorMessage);
+
+      try {
+        // Tentative 2: Parser multipart manuel
+        // On doit refaire la requête car le body a peut-être été partiellement consommé
+        // Heureusement, Next.js clone la requête donc on peut réessayer
+        const rawBody = await request.clone().arrayBuffer();
+        console.error('[Transcription] Raw body size:', rawBody.byteLength);
+
+        const parsed = parseMultipartFormData(rawBody, contentType);
+        const audioFromParser = parsed.files.get('audio');
+
+        if (audioFromParser) {
+          audioFile = createBlobFromParsedFile(audioFromParser);
+          console.error(
+            '[Transcription] Manual multipart parser succeeded, audio size:',
+            audioFile.size
+          );
+        }
+      } catch (manualError) {
+        const manualErrorMessage =
+          manualError instanceof Error ? manualError.message : String(manualError);
+        console.error('[Transcription] Manual parser also failed:', manualErrorMessage);
+
+        return NextResponse.json(
+          {
+            error: 'Erreur de parsing FormData. Vérifiez que le fichier audio est valide.',
+            code: 'INVALID_AUDIO',
+            debug: {
+              contentType: contentType.substring(0, 50),
+              contentLength,
+              nativeError: errorMessage,
+              manualError: manualErrorMessage,
+            },
           },
-        },
-        { status: 400 }
-      );
+          { status: 400 }
+        );
+      }
     }
 
-    const audioFile = formData.get('audio');
-
-    if (!audioFile || !(audioFile instanceof Blob)) {
+    if (!audioFile) {
       return NextResponse.json(
         { error: 'Fichier audio manquant. Champ "audio" requis.', code: 'INVALID_AUDIO' },
         { status: 400 }
