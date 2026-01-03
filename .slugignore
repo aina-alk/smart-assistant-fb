@@ -1,0 +1,32 @@
+# Documentation
+*.md
+!README.md
+docs/
+
+# Tests
+__tests__/
+*.test.ts
+*.spec.ts
+coverage/
+
+# Development
+.claude/
+.cursor/
+.husky/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Local environment files
+.env.local
+.env.development
+
+# Firebase (separate deployment)
+functions/
+.firebase/
+dataconnect/

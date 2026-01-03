@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Scalingo/scalingo.json/master/schema.json",
+  "name": "selav-medical",
+  "description": "Super Assistant Médical - Application certifiée HDS",
+  "repository": "https://github.com/aina-alk/selav-scalingo",
+  "stack": "scalingo-22",
+  "addons": ["redis"],
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "RATE_LIMIT_FAIL_SECURE": {
+      "description": "Active le mode fail-secure pour le rate limiting",
+      "value": "true"
+    }
+  },
+  "formation": {
+    "web": {
+      "amount": 1,
+      "size": "S"
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'Deployment completed successfully'"
+  }
+}

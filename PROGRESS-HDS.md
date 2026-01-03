@@ -11,14 +11,14 @@
 ┌────────────────────────────────────────────────────────────────────────┐
 │                    CONFORMITÉ HDS — 20 BLOCS                           │
 ├────────────────────────────────────────────────────────────────────────┤
-│  Bloc 0 : Infrastructure Scalingo        ███░░░░░░░░░  1/4   (25%)    │
+│  Bloc 0 : Infrastructure Scalingo        ██████░░░░░░  2/4   (50%)    │
 │  Bloc 1 : Module Anonymisation           ░░░░░░░░░░░░  0/4   (0%)     │
 │  Bloc 2 : Intégration Routes API         ░░░░░░░░░░░░  0/5   (0%)     │
 │  Bloc 3 : Audit FHIR Nominatif           ░░░░░░░░░░░░  0/3   (0%)     │
 │  Bloc 4 : Sécurité                       ░░░░░░░░░░░░  0/2   (0%)     │
 │  Bloc 5 : Documentation                  ░░░░░░░░░░░░  0/2   (0%)     │
 ├────────────────────────────────────────────────────────────────────────┤
-│  TOTAL                                   █░░░░░░░░░░░  1/20  (5%)     │
+│  TOTAL                                   ██░░░░░░░░░░  2/20  (10%)    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -31,7 +31,7 @@
 | #   | Bloc                           | Description                     | Status     | Fichiers créés                 |
 | --- | ------------------------------ | ------------------------------- | ---------- | ------------------------------ |
 | 0.1 | `nextjs-standalone-dockerfile` | Dockerfile multi-stage optimisé | ✅ Fait   | `Dockerfile`, `.dockerignore`  |
-| 0.2 | `config-scalingo`              | scalingo.json + Procfile        | ⬜ À faire | `scalingo.json`, `Procfile`    |
+| 0.2 | `config-scalingo`              | scalingo.json + Procfile        | ✅ Fait   | `scalingo.json`, `Procfile`, `.slugignore` |
 | 0.3 | `migration-redis-ioredis`      | Upstash → ioredis natif         | ⬜ À faire | `src/lib/redis/`               |
 | 0.4 | `env-variables-scripts`        | Variables env + scripts npm     | ⬜ À faire | `.env.example`, `package.json` |
 
@@ -220,7 +220,13 @@ src/app/api/
   - **Bonus** : Lazy init Firebase Admin (`src/lib/firebase/admin.ts`)
   - **Bonus** : Lazy init Firebase Client (`src/lib/firebase/config.ts`)
   - Build Docker : ✅ 324MB | TypeScript ✅ | ESLint ✅
-- [ ] **Prochain bloc** : 0.2 (Config Scalingo) ou 1.1 (Types anonymisation)
+- [x] **Bloc 0.2** : Configuration Scalingo
+  - Création `scalingo.json` avec addons Redis et formation web
+  - Création `Procfile` (web: node server.js)
+  - Création `.slugignore` (exclusion docs, tests, Firebase functions)
+  - Ajout scripts npm : `start:scalingo`, `docker:build`, `docker:run`
+  - TypeScript ✅ | ESLint ✅
+- [ ] **Prochain bloc** : 0.3 (Migration Redis ioredis) ou 1.1 (Types anonymisation)
 
 ---
 
