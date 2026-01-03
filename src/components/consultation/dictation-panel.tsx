@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AudioRecorder } from './audio-recorder';
 import { TranscriptionDisplay } from './transcription-display';
@@ -22,6 +22,7 @@ export function DictationPanel({
   className,
 }: DictationPanelProps) {
   const audioDuration = useAudioStore((state) => state.duration);
+  const resetAudio = useAudioStore((state) => state.reset);
   const isGeneratingCRC = useConsultationStore((state) => state.isGeneratingCRC);
 
   const {
@@ -66,6 +67,12 @@ export function DictationPanel({
     reset();
   }, [reset]);
 
+  // Reset complet : audio + transcription pour recommencer l'enregistrement
+  const handleRestart = useCallback(() => {
+    reset();
+    resetAudio();
+  }, [reset, resetAudio]);
+
   const prevStatusRef = useRef(status);
 
   useEffect(() => {
@@ -106,24 +113,35 @@ export function DictationPanel({
       )}
 
       {canGenerateCRC && (
-        <Button
-          onClick={handleGenerateCRC}
-          className="w-full gap-2"
-          size="lg"
-          disabled={isGeneratingCRC}
-        >
-          {isGeneratingCRC ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Génération en cours...
-            </>
-          ) : (
-            <>
-              <FileText className="h-5 w-5" />
-              Générer le compte-rendu de consultation
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button
+            onClick={handleGenerateCRC}
+            className="w-full gap-2"
+            size="lg"
+            disabled={isGeneratingCRC}
+          >
+            {isGeneratingCRC ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Génération en cours...
+              </>
+            ) : (
+              <>
+                <FileText className="h-5 w-5" />
+                Générer le compte-rendu de consultation
+              </>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleRestart}
+            className="gap-2"
+            disabled={isGeneratingCRC}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Recommencer l&apos;enregistrement
+          </Button>
+        </div>
       )}
     </div>
   );
