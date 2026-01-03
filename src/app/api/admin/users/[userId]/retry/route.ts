@@ -11,7 +11,22 @@ import { cookies } from 'next/headers';
 import { adminAuth, adminDb, FieldValue, verifySessionCookie } from '@/lib/firebase/admin';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Client Resend avec lazy initialization
+ * Évite l'erreur de build quand RESEND_API_KEY n'est pas disponible
+ */
+let _resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!_resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is required');
+    }
+    _resend = new Resend(apiKey);
+  }
+  return _resend;
+}
 
 export async function POST(
   _request: NextRequest,
@@ -63,7 +78,7 @@ export async function POST(
     console.warn(`Custom Claims définis pour ${userId}`);
 
     // 2. Envoyer l'email de confirmation au candidat
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: 'Selav <noreply@selav.fr>',
       to: userData.email,
       subject: "Votre demande d'inscription a bien été reçue",
@@ -85,7 +100,7 @@ export async function POST(
 
     // 3. Notifier l'admin
     const adminEmail = process.env.ADMIN_EMAIL || 'support@selav.fr';
-    await resend.emails.send({
+    await getResendClient().emails.send({
       from: 'Selav <noreply@selav.fr>',
       to: adminEmail,
       subject: `[Nouvelle inscription] ${userData.displayName} - ${getRoleLabel(userData.role)}`,

@@ -41,9 +41,19 @@ ASSEMBLYAI_API_KEY
 
 ```
 RESEND_API_KEY
+ADMIN_EMAIL=support@selav.fr
 ```
 
-### 5. Sécurité (obligatoire)
+> **Note** : `ADMIN_EMAIL` reçoit les notifications de nouvelles inscriptions
+
+### 5. Application (obligatoire)
+
+```
+NEXT_PUBLIC_APP_URL=https://selav-med-assist.osc-fr1.scalingo.io
+NODE_ENV=production
+```
+
+### 6. Sécurité (obligatoire)
 
 ```
 RATE_LIMIT_FAIL_SECURE=true
