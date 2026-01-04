@@ -132,20 +132,29 @@ export function useTranscriptionUpload() {
           throw new Error(`Audio invalide: size=${audioBlob?.size}, type=${audioBlob?.type}`);
         }
 
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
+        // Convert blob to base64 (avoids multipart parsing issues on Scalingo)
+        setUploadProgress(10);
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+        setUploadProgress(30);
 
-        // Debug: verify FormData content
-        const audioFromFormData = formData.get('audio');
-        console.warn('[Transcription] FormData content:', {
-          hasAudio: !!audioFromFormData,
-          audioType: audioFromFormData instanceof Blob ? 'Blob' : typeof audioFromFormData,
-          audioSize: audioFromFormData instanceof Blob ? audioFromFormData.size : 0,
+        console.warn('[Transcription] Base64 conversion complete:', {
+          originalSize: audioBlob.size,
+          base64Length: base64Audio.length,
         });
 
         const response = await fetch('/api/transcription', {
           method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            audio: base64Audio,
+            mimeType: audioBlob.type || 'audio/webm',
+            filename: 'recording.webm',
+          }),
           signal,
         });
 
